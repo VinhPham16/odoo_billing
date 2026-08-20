@@ -1,0 +1,38 @@
+version: '3.1'
+services:
+  # 1. Cấu hình dịch vụ Database (PostgreSQL)
+  db:
+    image: postgres:15
+    container_name: odoo_db
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=odoo
+      - POSTGRES_PASSWORD=odoo
+    ports:
+      - "5432:5432"
+    volumes:
+      - odoo-db-data:/var/lib/postgresql/data
+    restart: always
+
+  # 2. Cấu hình dịch vụ Odoo
+  web:
+    image: odoo:19.0
+    container_name: odoo_app
+    depends_on:
+      - db
+    ports:
+      - "8069:8069"
+    environment:
+      - HOST=db
+      - USER=odoo
+      - PASSWORD=odoo
+    volumes:
+      - odoo-web-data:/var/lib/odoo
+      - ./addons:/mnt/extra-addons
+      # Cho phép mount thêm module tùy chỉnh (Addons) nếu cần sau này:
+      # - ./extra-addons:/mnt/extra-addons
+    restart: always
+
+volumes:
+  odoo-db-data:
+  odoo-web-data:
