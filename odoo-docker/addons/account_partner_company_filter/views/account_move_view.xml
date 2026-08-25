@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_move_form_company_filter" model="ir.ui.view">
+        <field name="name">account.move.form.company.filter</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="arch" type="xml">
+            <field name="partner_id" position="attributes">
+                <!--
+                    Chỉ lọc is_company = True cho hóa đơn KHÁCH HÀNG
+                    (out_invoice / out_refund / out_receipt).
+                    Các move_type khác (vendor bill: in_invoice / in_refund / in_receipt,
+                    và entry) rơi vào nhánh else [] => domain rỗng => giữ nguyên như core.
+                -->
+                <attribute name="domain">[('is_company', '=', True)] if move_type in ('out_invoice', 'out_refund', 'out_receipt') else []</attribute>
+            </field>
+        </field>
+    </record>
+</odoo>
