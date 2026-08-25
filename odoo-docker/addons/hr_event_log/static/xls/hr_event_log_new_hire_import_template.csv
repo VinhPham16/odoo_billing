@@ -1,0 +1,2 @@
+event_type,effective_date,employee_id,department_id,job_id,work_location_id,team,job_offer_text,classification_id,job_title_group_id,work_phone,work_email,personal_email,address,birthday,gender,identification_id,education_general,education_level,contract_type_id,contract_date_start,contract_date_end
+New Hire,2020-01-15,Nguyen Van A,Sales,Sales Executive,Head Office,Team 1,Sales Executive,EBIT-1,Group A,+84 900 000 000,a.nguyen@company.com,a.nguyen@gmail.com,"123 Le Loi, District 1, HCMC",1995-03-20,Male,001095000123,University,Bachelor,Indefinite Term,2020-01-15,

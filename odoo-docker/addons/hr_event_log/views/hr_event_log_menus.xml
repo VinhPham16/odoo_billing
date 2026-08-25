@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- HR Event Log: operational only - log new events, view active data,
+         view leavers. No charts/analytics here; see hr's native Reporting
+         menu (hr.hr_menu_hr_reports) below for those. -->
+    <menuitem id="menu_hr_event_log_main"
+              name="HR Event Log"
+              parent="hr.menu_hr_root"
+              sequence="50"/>
+
+    <menuitem id="menu_hr_event_log_entries"
+              name="Event Log"
+              parent="menu_hr_event_log_main"
+              action="action_hr_event_log"
+              sequence="10"/>
+
+    <menuitem id="menu_hr_event_log_active"
+              name="Active Data"
+              parent="menu_hr_event_log_main"
+              action="action_hr_event_log_active_report"
+              sequence="20"/>
+
+    <menuitem id="menu_hr_event_log_leavers"
+              name="Leavers"
+              parent="menu_hr_event_log_main"
+              action="action_hr_event_log_leaver_report"
+              sequence="30"/>
+
+    <!-- Reporting: all analytical dashboards/charts, merged into hr's own
+         native top-level Reporting menu (hr.hr_menu_hr_reports) rather than
+         creating a second sibling "Reporting" entry. -->
+    <menuitem id="menu_hr_event_log_reporting_headcount"
+              name="Headcount &amp; Turnover"
+              parent="hr.hr_menu_hr_reports"
+              sequence="10"/>
+    <menuitem id="menu_hr_event_log_reporting_headcount_active"
+              name="Active Headcount"
+              parent="menu_hr_event_log_reporting_headcount"
+              action="action_hr_event_log_active_headcount"
+              sequence="10"/>
+    <menuitem id="menu_hr_event_log_reporting_headcount_turnover"
+              name="Turnover Rate"
+              parent="menu_hr_event_log_reporting_headcount"
+              action="action_hr_event_log_turnover_report"
+              sequence="20"/>
+    <menuitem id="menu_hr_event_log_reporting_headcount_leavers"
+              name="Leaver Analysis"
+              parent="menu_hr_event_log_reporting_headcount"
+              action="action_hr_event_log_leaver_analysis"
+              sequence="30"/>
+
+    <menuitem id="menu_hr_event_log_reporting_movement"
+              name="Employee Movement"
+              parent="hr.hr_menu_hr_reports"
+              sequence="20"/>
+    <menuitem id="menu_hr_event_log_reporting_movement_newhire"
+              name="New Hire Volume"
+              parent="menu_hr_event_log_reporting_movement"
+              action="action_hr_event_log_new_hire"
+              sequence="10"/>
+    <menuitem id="menu_hr_event_log_reporting_movement_transfers"
+              name="Internal Transfers"
+              parent="menu_hr_event_log_reporting_movement"
+              action="action_hr_event_log_transfers"
+              sequence="20"/>
+    <menuitem id="menu_hr_event_log_reporting_movement_frequency"
+              name="Event Frequency"
+              parent="menu_hr_event_log_reporting_movement"
+              action="action_hr_event_log_monthly_report"
+              sequence="30"/>
+
+    <menuitem id="menu_hr_event_log_reporting_leave"
+              name="Leave &amp; Capacity"
+              parent="hr.hr_menu_hr_reports"
+              sequence="30"/>
+    <menuitem id="menu_hr_event_log_reporting_leave_util"
+              name="Leave Utilization"
+              parent="menu_hr_event_log_reporting_leave"
+              action="action_hr_event_log_leave_utilization"
+              sequence="10"/>
+    <menuitem id="menu_hr_event_log_reporting_leave_bytype"
+              name="Leave by Type"
+              parent="menu_hr_event_log_reporting_leave"
+              action="action_hr_event_log_leave_by_type"
+              sequence="20"/>
+    <menuitem id="menu_hr_event_log_reporting_leave_absenteeism"
+              name="Absenteeism"
+              parent="menu_hr_event_log_reporting_leave"
+              action="action_hr_event_log_absenteeism"
+              sequence="30"/>
+
+    <menuitem id="menu_hr_event_log_reporting_audit"
+              name="HR Audit &amp; Compliance"
+              parent="hr.hr_menu_hr_reports"
+              sequence="40"/>
+    <menuitem id="menu_hr_event_log_reporting_audit_recent"
+              name="Recent Transactions"
+              parent="menu_hr_event_log_reporting_audit"
+              action="action_hr_event_log_recent"
+              sequence="10"/>
+    <menuitem id="menu_hr_event_log_reporting_audit_anomalies"
+              name="Event Anomalies"
+              parent="menu_hr_event_log_reporting_audit"
+              action="action_hr_event_log_anomaly_report"
+              sequence="20"/>
+    <menuitem id="menu_hr_event_log_reporting_audit_reconciliation"
+              name="Status Reconciliation"
+              parent="menu_hr_event_log_reporting_audit"
+              action="action_hr_event_log_reconciliation_report"
+              sequence="30"/>
+
+    <!-- Master data goes under HR's own Configuration menu -->
+    <menuitem id="menu_hr_event_log_mapping"
+              name="HR Event Log Master Data"
+              parent="hr.menu_human_resources_configuration"
+              action="action_hr_event_log_mapping"
+              sequence="90"/>
+</odoo>

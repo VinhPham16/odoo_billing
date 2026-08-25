@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Employee Movement Dashboard -->
+    <record id="action_hr_event_log_new_hire" model="ir.actions.act_window">
+        <field name="name">New Hire Volume</field>
+        <field name="res_model">hr.event.log</field>
+        <field name="view_mode">graph,pivot,list</field>
+        <field name="domain">[('event_type', '=', 'new_hire')]</field>
+    </record>
+
+    <record id="action_hr_event_log_transfers" model="ir.actions.act_window">
+        <field name="name">Internal Transfers</field>
+        <field name="res_model">hr.event.log</field>
+        <field name="view_mode">graph,pivot,list</field>
+        <field name="domain">[('event_type', '=', 'transfer')]</field>
+    </record>
+
+    <!-- Headcount & Turnover Dashboard -->
+    <record id="action_hr_event_log_leaver_analysis" model="ir.actions.act_window">
+        <field name="name">Leaver Analysis</field>
+        <field name="res_model">hr.event.log</field>
+        <field name="view_mode">pivot,graph,list</field>
+        <field name="domain">[('event_type', '=', 'resignation')]</field>
+        <field name="help">
+            Group by Resignation Type (Voluntary/Involuntary) and use Tenure
+            at Event (Days) as a measure (switch to Average in the pivot's
+            measure menu) to see average tenure of leavers.
+        </field>
+    </record>
+
+    <!-- Leave & Capacity Dashboard -->
+    <record id="action_hr_event_log_leave_utilization" model="ir.actions.act_window">
+        <field name="name">Leave Utilization</field>
+        <field name="res_model">hr.event.log</field>
+        <field name="view_mode">pivot,graph,list</field>
+        <field name="domain">[('event_type', 'in', ['maternity_leave', 'extended_leave'])]</field>
+        <field name="help">
+            Measure = Leave Days. Group by Department or Month to compare
+            time-off utilization across teams or periods.
+        </field>
+    </record>
+
+    <record id="action_hr_event_log_leave_by_type" model="ir.actions.act_window">
+        <field name="name">Leave by Type</field>
+        <field name="res_model">hr.event.log</field>
+        <field name="view_mode">pivot,graph,list</field>
+        <field name="domain">[('event_type', 'in', ['maternity_leave', 'extended_leave'])]</field>
+        <field name="help">
+            In the Pivot view, group rows by Event Type to compare volume
+            and total Leave Days across leave categories.
+        </field>
+    </record>
+
+    <record id="action_hr_event_log_absenteeism" model="ir.actions.act_window">
+        <field name="name">Absenteeism (Planned vs Unplanned)</field>
+        <field name="res_model">hr.event.log</field>
+        <field name="view_mode">pivot,graph,list</field>
+        <field name="domain">[('event_type', 'in', ['maternity_leave', 'extended_leave'])]</field>
+        <field name="help">
+            Group rows by "Unplanned" to compare planned vs unplanned leave
+            volume/days. Absenteeism Rate = unplanned leave count (or days) /
+            total leave count (or days) for the period you're viewing -
+            calculate this from the two group totals shown.
+        </field>
+    </record>
+
+    <!-- HR Audit &amp; Compliance Dashboard -->
+    <record id="action_hr_event_log_recent" model="ir.actions.act_window">
+        <field name="name">Recent Transactions</field>
+        <field name="res_model">hr.event.log</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_hr_event_log_list_recent"/>
+    </record>
+</odoo>
