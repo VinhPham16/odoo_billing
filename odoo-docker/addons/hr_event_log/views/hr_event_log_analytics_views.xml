@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_hr_event_log_graph" model="ir.ui.view">
+        <field name="name">hr.event.log.graph</field>
+        <field name="model">hr.event.log</field>
+        <field name="arch" type="xml">
+            <graph string="HR Events" type="bar">
+                <field name="effective_date" interval="month"/>
+                <field name="event_type"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="view_hr_event_log_pivot" model="ir.ui.view">
+        <field name="name">hr.event.log.pivot</field>
+        <field name="model">hr.event.log</field>
+        <field name="arch" type="xml">
+            <pivot string="HR Events">
+                <field name="effective_date" interval="month" type="row"/>
+                <field name="event_type" type="col"/>
+                <field name="department_id" type="row"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_hr_event_log_list_recent" model="ir.ui.view">
+        <field name="name">hr.event.log.list.recent</field>
+        <field name="model">hr.event.log</field>
+        <field name="arch" type="xml">
+            <list string="Recent Transactions" create="0" edit="0" delete="0" default_order="create_date desc">
+                <field name="create_date" string="Logged At"/>
+                <field name="create_uid" string="Logged By"/>
+                <field name="event_ref"/>
+                <field name="employee_id"/>
+                <field name="event_type"/>
+                <field name="effective_date"/>
+                <field name="department_id"/>
+            </list>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Active Roster: add graph/pivot alongside its existing list -->
+    <record id="view_hr_event_log_active_report_graph" model="ir.ui.view">
+        <field name="name">hr.event.log.active.report.graph</field>
+        <field name="model">hr.event.log.active.report</field>
+        <field name="arch" type="xml">
+            <graph string="Active Headcount" type="bar">
+                <field name="department_id"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="view_hr_event_log_active_report_pivot" model="ir.ui.view">
+        <field name="name">hr.event.log.active.report.pivot</field>
+        <field name="model">hr.event.log.active.report</field>
+        <field name="arch" type="xml">
+            <pivot string="Active Headcount">
+                <field name="department_id" type="row"/>
+                <field name="job_id" type="row"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="action_hr_event_log_active_headcount" model="ir.actions.act_window">
+        <field name="name">Active Headcount</field>
+        <field name="res_model">hr.event.log.active.report</field>
+        <field name="view_mode">graph,pivot,list</field>
+    </record>
+
+    <!-- Turnover Rate -->
+    <record id="view_hr_event_log_turnover_report_list" model="ir.ui.view">
+        <field name="name">hr.event.log.turnover.report.list</field>
+        <field name="model">hr.event.log.turnover.report</field>
+        <field name="arch" type="xml">
+            <list string="Turnover Rate by Month" create="0" edit="0" delete="0">
+                <field name="month_start"/>
+                <field name="resignation_count"/>
+                <field name="headcount_eom"/>
+                <field name="turnover_rate" widget="percentage"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_hr_event_log_turnover_report_graph" model="ir.ui.view">
+        <field name="name">hr.event.log.turnover.report.graph</field>
+        <field name="model">hr.event.log.turnover.report</field>
+        <field name="arch" type="xml">
+            <graph string="Turnover Rate by Month" type="line">
+                <field name="month_start"/>
+                <field name="turnover_rate" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="action_hr_event_log_turnover_report" model="ir.actions.act_window">
+        <field name="name">Turnover Rate</field>
+        <field name="res_model">hr.event.log.turnover.report</field>
+        <field name="view_mode">graph,list</field>
+        <field name="help">
+            Turnover Rate = resignations that month / headcount at month end.
+            Headcount at month end is approximated from each employee's latest
+            logged event as of that date (see code comment in
+            hr_event_log_analysis.py for the exact definition and its limits).
+        </field>
+    </record>
+
+    <!-- Event Frequency + Anomalies -->
+    <record id="view_hr_event_log_monthly_report_list" model="ir.ui.view">
+        <field name="name">hr.event.log.monthly.report.list</field>
+        <field name="model">hr.event.log.monthly.report</field>
+        <field name="arch" type="xml">
+            <list string="Event Frequency by Month" create="0" edit="0" delete="0"
+                  decoration-danger="is_anomaly == True">
+                <field name="month_start"/>
+                <field name="event_type"/>
+                <field name="event_count"/>
+                <field name="trailing_avg_3mo"/>
+                <field name="is_anomaly"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_hr_event_log_monthly_report_graph" model="ir.ui.view">
+        <field name="name">hr.event.log.monthly.report.graph</field>
+        <field name="model">hr.event.log.monthly.report</field>
+        <field name="arch" type="xml">
+            <graph string="Event Frequency by Month" type="line">
+                <field name="month_start"/>
+                <field name="event_type"/>
+                <field name="event_count" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="action_hr_event_log_monthly_report" model="ir.actions.act_window">
+        <field name="name">Event Frequency</field>
+        <field name="res_model">hr.event.log.monthly.report</field>
+        <field name="view_mode">graph,list</field>
+    </record>
+
+    <record id="action_hr_event_log_anomaly_report" model="ir.actions.act_window">
+        <field name="name">Event Anomalies</field>
+        <field name="res_model">hr.event.log.monthly.report</field>
+        <field name="view_mode">list,graph</field>
+        <field name="domain">[('is_anomaly', '=', True)]</field>
+        <field name="help">
+            Flags a (month, event type) combination where the count is more
+            than double the trailing 3-month average - e.g. a sudden wave of
+            transfers or a cluster of leave requests. This is a simple
+            spike heuristic, not statistical anomaly detection - review
+            flagged rows manually rather than treating them as confirmed issues.
+        </field>
+    </record>
+
+    <!-- Status Reconciliation -->
+    <record id="view_hr_event_log_reconciliation_report_list" model="ir.ui.view">
+        <field name="name">hr.event.log.reconciliation.report.list</field>
+        <field name="model">hr.event.log.reconciliation.report</field>
+        <field name="arch" type="xml">
+            <list string="Status Reconciliation" create="0" edit="0" delete="0">
+                <field name="employee_id"/>
+                <field name="employee_active_flag" string="Active in Odoo"/>
+                <field name="latest_event_type"/>
+                <field name="latest_event_date"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_hr_event_log_reconciliation_report" model="ir.actions.act_window">
+        <field name="name">Status Reconciliation</field>
+        <field name="res_model">hr.event.log.reconciliation.report</field>
+        <field name="view_mode">list</field>
+        <field name="help">
+            Employees where the Odoo "Active" flag disagrees with the event
+            log - e.g. still Active despite a logged resignation, or archived
+            with no resignation ever logged. An empty list here means the
+            two systems of record agree.
+        </field>
+    </record>
+</odoo>

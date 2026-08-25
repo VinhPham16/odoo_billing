@@ -1,0 +1,10 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_hr_event_log_user,hr.event.log.user,model_hr_event_log,base.group_user,1,0,1,0
+access_hr_event_log_admin,hr.event.log.admin,model_hr_event_log,group_event_log_admin,1,1,1,1
+access_hr_event_log_active_report_user,hr.event.log.active.report.user,model_hr_event_log_active_report,base.group_user,1,0,0,0
+access_hr_event_log_leaver_report_user,hr.event.log.leaver.report.user,model_hr_event_log_leaver_report,base.group_user,1,0,0,0
+access_hr_event_log_mapping_user,hr.event.log.mapping.user,model_hr_event_log_mapping,base.group_user,1,0,0,0
+access_hr_event_log_mapping_admin,hr.event.log.mapping.admin,model_hr_event_log_mapping,group_event_log_admin,1,1,1,1
+access_hr_event_log_monthly_report_user,hr.event.log.monthly.report.user,model_hr_event_log_monthly_report,base.group_user,1,0,0,0
+access_hr_event_log_turnover_report_user,hr.event.log.turnover.report.user,model_hr_event_log_turnover_report,base.group_user,1,0,0,0
+access_hr_event_log_reconciliation_report_user,hr.event.log.reconciliation.report.user,model_hr_event_log_reconciliation_report,base.group_user,1,0,0,0
