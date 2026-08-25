@@ -7,12 +7,14 @@
         <field name="arch" type="xml">
             <field name="partner_id" position="attributes">
                 <!--
-                    Chỉ lọc is_company = True cho hóa đơn KHÁCH HÀNG
-                    (out_invoice / out_refund / out_receipt).
-                    Các move_type khác (vendor bill: in_invoice / in_refund / in_receipt,
-                    và entry) rơi vào nhánh else [] => domain rỗng => giữ nguyên như core.
+                    Chỉ áp cho hóa đơn KHÁCH HÀNG (out_invoice / out_refund / out_receipt):
+                    lọc theo customer_rank > 0 => lấy đúng partner được tạo từ luồng Customer
+                    (Odoo set customer_rank = 1 khi tạo với context res_partner_search_mode='customer'),
+                    KHÔNG loại nhầm khách hàng là cá nhân.
+                    Vendor bill (in_invoice / in_refund / in_receipt) và entry rơi vào nhánh
+                    else [] => domain rỗng => giữ nguyên như core.
                 -->
-                <attribute name="domain">[('is_company', '=', True)] if move_type in ('out_invoice', 'out_refund', 'out_receipt') else []</attribute>
+                <attribute name="domain">[('customer_rank', '>', 0)] if move_type in ('out_invoice', 'out_refund', 'out_receipt') else []</attribute>
             </field>
         </field>
     </record>
