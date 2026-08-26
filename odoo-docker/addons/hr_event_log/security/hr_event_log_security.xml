@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="group_event_log_admin" model="res.groups">
+        <field name="name">HR Event Log Admin</field>
+        <field name="comment">
+            Only members of this group may edit or delete existing HR Event Log
+            entries, and may manage HR Event Log Master Data. All other HR
+            users may only create new (append) event log entries.
+        </field>
+    </record>
+
+    <!-- Defense in depth: write()/unlink() overrides in hr_event_log.py
+         already block non-admins at the ORM level (covers RPC/API too), a
+         record rule is a second layer. -->
+    <record id="rule_event_log_no_write_non_admin" model="ir.rule">
+        <field name="name">HR Event Log: block write for non-admins</field>
+        <field name="model_id" ref="model_hr_event_log"/>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="perm_read">1</field>
+        <field name="perm_create">1</field>
+        <field name="perm_write">0</field>
+        <field name="perm_unlink">0</field>
+    </record>
+
+    <record id="rule_event_log_admin_full_access" model="ir.rule">
+        <field name="name">HR Event Log: admin full access</field>
+        <field name="model_id" ref="model_hr_event_log"/>
+        <field name="groups" eval="[(4, ref('group_event_log_admin'))]"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="perm_read">1</field>
+        <field name="perm_create">1</field>
+        <field name="perm_write">1</field>
+        <field name="perm_unlink">1</field>
+    </record>
+</odoo>

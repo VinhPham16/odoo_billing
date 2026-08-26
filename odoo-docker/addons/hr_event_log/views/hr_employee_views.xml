@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Employee form: status field next to the name, smart button to the
+         history, and a "Log HR Event" action button. -->
+    <record id="view_employee_form_inherit_event_log" model="ir.ui.view">
+        <field name="name">hr.employee.form.inherit.event.log</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[hasclass('oe_button_box')]" position="inside">
+                <button name="action_view_event_log" type="object"
+                        class="oe_stat_button" icon="fa-history">
+                    <field name="event_log_count" widget="statinfo" string="HR Events"/>
+                </button>
+            </xpath>
+
+            <xpath expr="//div[hasclass('oe_title')]" position="inside">
+                <field name="current_hr_status" widget="badge"
+                       decoration-success="current_hr_status == 'working'"
+                       decoration-warning="current_hr_status == 'on_leave'"
+                       decoration-danger="current_hr_status == 'resigned'"/>
+            </xpath>
+
+            <xpath expr="//sheet" position="before">
+                <div class="oe_button_box" style="justify-content:flex-end;">
+                    <button name="action_log_hr_event" type="object"
+                            string="Log HR Event" class="btn-primary"/>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
