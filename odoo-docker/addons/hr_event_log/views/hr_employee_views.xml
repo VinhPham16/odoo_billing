@@ -27,6 +27,52 @@
                             string="Log HR Event" class="btn-primary"/>
                 </div>
             </xpath>
+
+            <xpath expr="//notebook" position="inside">
+                <page name="hr_event_log_data" string="HR Event Log Data" groups="hr.group_hr_user">
+                    <group>
+                        <group string="Classification &amp; Contract">
+                            <field name="event_log_classification_id"/>
+                            <field name="event_log_job_title_group_id"/>
+                            <field name="event_log_contract_type_id"/>
+                            <field name="contract_date_start"/>
+                            <field name="contract_date_end"/>
+                        </group>
+                        <group string="Salary">
+                            <field name="event_log_salary_scale_id"/>
+                            <field name="event_log_salary_scale_group_id"/>
+                            <field name="event_log_salary_grade_id"/>
+                        </group>
+                        <group string="Contact &amp; Personal">
+                            <field name="event_log_team"/>
+                            <field name="event_log_personal_email"/>
+                            <field name="event_log_address"/>
+                            <field name="event_log_gender"/>
+                        </group>
+                        <group string="Education">
+                            <field name="event_log_education_general"/>
+                            <field name="event_log_education_level"/>
+                        </group>
+                        <group string="New Hire / Offer">
+                            <field name="event_log_job_offer_text"/>
+                        </group>
+                        <group string="Resignation">
+                            <field name="event_log_last_working_day"/>
+                            <field name="event_log_resignation_reason_type"/>
+                        </group>
+                        <group string="Leave">
+                            <field name="event_log_leave_start_date"/>
+                            <field name="event_log_leave_expected_return_date"/>
+                            <field name="event_log_leave_coverage_employee_id"/>
+                            <field name="event_log_leave_paid"/>
+                            <field name="event_log_is_unplanned_leave"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="event_log_notes"/>
+                    </group>
+                </page>
+            </xpath>
         </field>
     </record>
 

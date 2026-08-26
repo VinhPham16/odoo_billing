@@ -57,6 +57,45 @@ class HrEventLog(models.Model):
         "contract_type_id", "contract_date_start", "contract_date_end",
     ]
 
+    # Maps each PROFILE_FIELDS entry to its counterpart on hr.employee, so
+    # logging an event can write the data back onto the live employee
+    # record, not just keep it in the log. Fields with no native
+    # hr.employee equivalent are mirrored via the event_log_* fields added
+    # to hr.employee in hr_employee.py.
+    EMPLOYEE_SYNC_FIELD_MAP = {
+        "department_id": "department_id",
+        "job_id": "job_id",
+        "work_location_id": "work_location_id",
+        "team": "event_log_team",
+        "classification_id": "event_log_classification_id",
+        "job_title_group_id": "event_log_job_title_group_id",
+        "work_phone": "work_phone",
+        "work_email": "work_email",
+        "personal_email": "event_log_personal_email",
+        "address": "event_log_address",
+        "birthday": "birthday",
+        "gender": "event_log_gender",
+        "identification_id": "identification_id",
+        "education_general": "event_log_education_general",
+        "education_level": "event_log_education_level",
+        "contract_type_id": "event_log_contract_type_id",
+        "contract_date_start": "contract_date_start",
+        "contract_date_end": "contract_date_end",
+        # Event-specific fields (resignation/leave/new-hire one-offs) - not
+        # in PROFILE_FIELDS, but still relevant for whichever event type
+        # they belong to per EVENT_FIELD_MAP, so _sync_employee_fields()
+        # picks these up automatically for the right events.
+        "job_offer_text": "event_log_job_offer_text",
+        "last_working_day": "event_log_last_working_day",
+        "resignation_reason_type": "event_log_resignation_reason_type",
+        "leave_start_date": "event_log_leave_start_date",
+        "leave_expected_return_date": "event_log_leave_expected_return_date",
+        "leave_coverage_employee_id": "event_log_leave_coverage_employee_id",
+        "leave_paid": "event_log_leave_paid",
+        "is_unplanned_leave": "event_log_is_unplanned_leave",
+        "notes": "event_log_notes",
+    }
+
     event_ref = fields.Char(
         string="Event ID", readonly=True, copy=False,
         help="Auto-generated as <employee ref>-<sequence>, e.g. EMP0123-02.",
@@ -65,6 +104,12 @@ class HrEventLog(models.Model):
         "hr.employee", string="Employee",
         help="Leave blank only when Event type = New Hire (the employee record "
              "itself may not exist yet). Required for every other event type.",
+    )
+    new_employee_name = fields.Char(
+        string="Employee Name",
+        help="Only used when Event type = New Hire and no existing Employee is "
+             "selected: creates a new Employee record with this name, linked "
+             "to this event, on save.",
     )
     event_type = fields.Selection(
         [
@@ -199,16 +244,47 @@ class HrEventLog(models.Model):
             defaults["effective_date"] = fields.Date.context_today(self)
         return defaults
 
+    # Bump this whenever the template file's content changes: static/ files
+    # are served with a long browser cache (Cache-Control: max-age=604800),
+    # so without a query string change, browsers that already downloaded it
+    # once keep serving their stale local copy indefinitely.
+    IMPORT_TEMPLATE_VERSION = 3
+
     @api.model
     def get_import_templates(self):
         return [{
-            "label": _("Import Template for New Hire Onboarding"),
-            "template": "/hr_event_log/static/xls/hr_event_log_new_hire_import_template.csv",
+            "label": _("Import Template for HR Event Log (all event types)"),
+            "template": "/hr_event_log/static/xls/hr_event_log_new_hire_import_template.xlsx?v=%s" % self.IMPORT_TEMPLATE_VERSION,
         }]
 
     # -----------------------------------------------------------------
     @api.model_create_multi
     def create(self, vals_list):
+        for vals in vals_list:
+            if vals.get("event_type") == "new_hire" and not vals.get("employee_id"):
+                name = vals.get("new_employee_name")
+                if not name:
+                    raise UserError(_(
+                        "Employee Name is required to log a New Hire event "
+                        "without selecting an existing Employee."
+                    ))
+                employee_vals = {"name": name}
+                for log_field, emp_field in self.EMPLOYEE_SYNC_FIELD_MAP.items():
+                    if vals.get(log_field):
+                        employee_vals[emp_field] = vals[log_field]
+                # sudo(): creating the employee is a system-triggered side
+                # effect of a permitted "log a New Hire event" action, not a
+                # direct hr.employee edit - any user allowed to log events
+                # must be able to trigger it even without hr.employee
+                # create rights.
+                # skip_event_log_creation: this hr.event.log row IS the
+                # record of this hire - hr.employee's own create() override
+                # must not also auto-log a second, duplicate New Hire event.
+                new_employee = self.env["hr.employee"].sudo().with_context(
+                    skip_event_log_creation=True
+                ).create(employee_vals)
+                vals["employee_id"] = new_employee.id
+
         records = super().create(vals_list)
         for rec in records:
             if not rec.event_ref:
@@ -227,7 +303,36 @@ class HrEventLog(models.Model):
                 # initial create, not an edit of an existing entry, so it
                 # must not require group_event_log_admin.
                 models.Model.write(rec.sudo(), {"event_ref": "%s-%02d" % (ref, count)})
+            rec._sync_employee_fields()
         return records
+
+    def _sync_employee_fields(self):
+        """Write this event's relevant fields back onto the live employee
+        record, on top of appending the log row itself - only the fields
+        relevant to this event's type (per EVENT_FIELD_MAP), so e.g. a
+        Transfer event doesn't touch birthday/gender."""
+        self.ensure_one()
+        if not self.employee_id:
+            return
+        sync_vals = {}
+        for log_field in self.EVENT_FIELD_MAP.get(self.event_type, []):
+            emp_field = self.EMPLOYEE_SYNC_FIELD_MAP.get(log_field)
+            if not emp_field:
+                continue
+            value = self[log_field]
+            if value:
+                sync_vals[emp_field] = value.id if hasattr(value, "id") else value
+        if sync_vals:
+            # sudo(): see create() above - same permitted-side-effect reasoning.
+            self.employee_id.sudo().write(sync_vals)
+
+    def action_create_employee_user(self):
+        """Reuse hr.employee's own native 'Create User' confirmation dialog
+        (pre-filled, still requires an explicit human Save) rather than
+        silently auto-creating a res.users record - keeps Odoo's own
+        subscription-cost awareness intact."""
+        self.ensure_one()
+        return self.employee_id.action_create_user()
 
     # -----------------------------------------------------------------
     # Append-only enforcement (ORM-level, so XML-RPC/API callers can't bypass it)
@@ -270,16 +375,11 @@ class HrEventLog(models.Model):
                 setattr(self, f, latest_log[f])
             return
 
-        emp = self.employee_id
-        self.department_id = emp.department_id
-        self.job_id = emp.job_id
-        self.work_location_id = emp.work_location_id
-        self.work_phone = emp.work_phone
-        self.work_email = emp.work_email
-        self.birthday = emp.birthday
-        self.gender = emp.gender
-        self.identification_id = emp.identification_id
-        contract = emp.contract_id if "contract_id" in emp._fields else False
-        if contract:
-            self.contract_date_start = contract.date_start
-            self.contract_date_end = contract.date_end
+        # sudo(): some source fields (e.g. contract_date_start) are
+        # restricted to Employees/Administrator - any user allowed to log
+        # an event must still be able to auto-fill from them.
+        emp = self.employee_id.sudo()
+        for log_field in self.PROFILE_FIELDS:
+            emp_field = self.EMPLOYEE_SYNC_FIELD_MAP.get(log_field)
+            if emp_field:
+                setattr(self, log_field, emp[emp_field])

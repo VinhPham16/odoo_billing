@@ -21,13 +21,20 @@
         <field name="arch" type="xml">
             <form string="HR Event">
                 <header>
+                    <button string="Save" special="save" class="btn-primary"/>
                     <button string="Discard" special="cancel" class="btn-secondary"/>
+                    <button name="action_create_employee_user" type="object"
+                            string="Create Login Account"
+                            invisible="event_type != 'new_hire' or not employee_id"/>
                 </header>
                 <sheet>
                     <group>
                         <field name="event_ref" readonly="1"/>
                         <field name="event_type"/>
                         <field name="employee_id" required="event_type != 'new_hire'"/>
+                        <field name="new_employee_name"
+                               invisible="event_type != 'new_hire' or employee_id"
+                               required="event_type == 'new_hire' and not employee_id"/>
                         <field name="effective_date"/>
                     </group>
 
