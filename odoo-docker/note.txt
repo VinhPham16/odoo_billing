@@ -1,4 +1,4 @@
-password odoo database: um7r-u64x-7gfn
+password odoo database: yjhw-jxan-5zwv
 
 
 database: uat_money_flow_tckh
