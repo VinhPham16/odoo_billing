@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_view_form_bidv" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.bidv</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="account.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//block[@id='invoicing_settings']" position="before">
+                <block title="BIDV Currency Rate" id="bidv_currency_rate_block">
+                    <setting id="bidv_enabled_setting" help="Tự động lấy tỷ giá phiên mở cửa BIDV">
+                        <field name="bidv_enabled"/>
+                        <div class="content-group mt16" invisible="not bidv_enabled">
+                            <div class="row">
+                                <label for="bidv_currencies" class="col-lg-4 o_light_label"/>
+                                <field name="bidv_currencies" placeholder="USD,EUR"/>
+                            </div>
+                            <div class="row">
+                                <label for="bidv_anomaly_threshold" class="col-lg-4 o_light_label"/>
+                                <field name="bidv_anomaly_threshold"/>
+                            </div>
+                            <div class="row">
+                                <label for="bidv_window_start" class="col-lg-4 o_light_label"/>
+                                <field name="bidv_window_start"/>
+                            </div>
+                            <div class="row">
+                                <label for="bidv_window_end" class="col-lg-4 o_light_label"/>
+                                <field name="bidv_window_end"/>
+                            </div>
+                            <div class="row">
+                                <label for="bidv_skip_weekend" class="col-lg-4 o_light_label"/>
+                                <field name="bidv_skip_weekend"/>
+                            </div>
+                            <div class="row">
+                                <label for="bidv_telegram_token" class="col-lg-4 o_light_label"/>
+                                <field name="bidv_telegram_token" password="True"/>
+                            </div>
+                            <div class="row">
+                                <label for="bidv_telegram_chat_id" class="col-lg-4 o_light_label"/>
+                                <field name="bidv_telegram_chat_id"/>
+                            </div>
+                            <div class="mt8">
+                                <button name="action_bidv_run_force" type="object"
+                                        string="Chạy lấy tỷ giá ngay (force)" class="btn-secondary"/>
+                            </div>
+                        </div>
+                    </setting>
+                </block>
+            </xpath>
+        </field>
+    </record>
+</odoo>

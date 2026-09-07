@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_bidv_rate_log_user,bidv.exchange.rate.log user,model_bidv_exchange_rate_log,base.group_user,1,0,0,0
+access_bidv_rate_log_manager,bidv.exchange.rate.log manager,model_bidv_exchange_rate_log,account.group_account_manager,1,1,1,1
+access_bidv_rate_log_line_user,bidv.exchange.rate.log.line user,model_bidv_exchange_rate_log_line,base.group_user,1,0,0,0
+access_bidv_rate_log_line_manager,bidv.exchange.rate.log.line manager,model_bidv_exchange_rate_log_line,account.group_account_manager,1,1,1,1
