@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_account_department_revenue_report_pivot" model="ir.ui.view">
+        <field name="name">account.department.revenue.report.pivot</field>
+        <field name="model">account.department.revenue.report</field>
+        <field name="arch" type="xml">
+            <pivot string="Revenue by Department" sample="1">
+                <field name="department_id" type="row"/>
+                <field name="invoice_date" interval="month" type="col"/>
+                <field name="amount" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_account_department_revenue_report_graph" model="ir.ui.view">
+        <field name="name">account.department.revenue.report.graph</field>
+        <field name="model">account.department.revenue.report</field>
+        <field name="arch" type="xml">
+            <graph string="Revenue by Department" type="bar" sample="1">
+                <field name="department_id"/>
+                <field name="amount" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="view_account_department_revenue_report_list" model="ir.ui.view">
+        <field name="name">account.department.revenue.report.list</field>
+        <field name="model">account.department.revenue.report</field>
+        <field name="arch" type="xml">
+            <list string="Revenue by Department" create="false" sample="1">
+                <field name="invoice_date"/>
+                <field name="move_name" string="Number"/>
+                <field name="partner_id"/>
+                <field name="department_id"/>
+                <field name="employee_id" optional="show"/>
+                <field name="invoice_user_id" optional="hide"/>
+                <field name="product_id" optional="hide"/>
+                <field name="account_id" optional="hide"/>
+                <field name="journal_id" optional="hide"/>
+                <field name="move_type" optional="hide"/>
+                <field name="currency_id" column_invisible="True"/>
+                <field name="amount" sum="Total"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_account_department_revenue_report_search" model="ir.ui.view">
+        <field name="name">account.department.revenue.report.search</field>
+        <field name="model">account.department.revenue.report</field>
+        <field name="arch" type="xml">
+            <search string="Revenue by Department">
+                <field name="department_id"/>
+                <field name="employee_id"/>
+                <field name="partner_id"/>
+                <field name="move_name" string="Number"/>
+                <field name="product_id"/>
+                <separator/>
+                <filter string="Invoices" name="invoices"
+                        domain="[('move_type', '=', 'out_invoice')]"/>
+                <filter string="Credit Notes" name="refunds"
+                        domain="[('move_type', '=', 'out_refund')]"/>
+                <separator/>
+                <filter string="Invoice Date" name="filter_invoice_date" date="invoice_date"/>
+                <group>
+                    <filter string="Department" name="group_by_department"
+                            domain="[]" context="{'group_by': 'department_id'}"/>
+                    <filter string="Nhân viên kinh doanh" name="group_by_employee"
+                            domain="[]" context="{'group_by': 'employee_id'}"/>
+                    <filter string="Customer" name="group_by_partner"
+                            domain="[]" context="{'group_by': 'partner_id'}"/>
+                    <filter string="Product" name="group_by_product"
+                            domain="[]" context="{'group_by': 'product_id'}"/>
+                    <filter string="Invoice Date" name="group_by_invoice_date"
+                            domain="[]" context="{'group_by': 'invoice_date'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_account_department_revenue_report" model="ir.actions.act_window">
+        <field name="name">Revenue by Department</field>
+        <field name="res_model">account.department.revenue.report</field>
+        <field name="view_mode">pivot,graph,list</field>
+        <field name="search_view_id" ref="view_account_department_revenue_report_search"/>
+        <field name="context">{'search_default_group_by_department': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Chưa có doanh thu nào để hiển thị
+            </p>
+            <p>
+                Báo cáo lấy từ dòng bút toán tài khoản doanh thu của các hóa
+                đơn bán đã được Post, nhóm theo phòng ban ghi trên hóa đơn.
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="menu_account_department_revenue_report"
+              name="Revenue by Department"
+              parent="account.menu_finance_reports"
+              action="action_account_department_revenue_report"
+              sequence="55"/>
+</odoo>

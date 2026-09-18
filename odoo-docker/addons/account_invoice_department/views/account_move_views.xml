@@ -1,44 +1,68 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Form hóa đơn: Department nằm ngay dưới Salesperson trong tab
-         "Other Info" > group "Invoice", để thấy rõ quan hệ tự-điền giữa
-         hai field. -->
+    <!--
+        Form hóa đơn: Nhân viên kinh doanh + Department nằm ngay dưới
+        Salesperson trong tab "Other Info" > group "Invoice".
+
+        Đặt nhãn tách bạch hai vai trò:
+        - Salesperson (invoice_user_id, của core): người phụ trách hóa đơn
+          TRONG HỆ THỐNG, thường là kế toán lập hóa đơn. Core còn dùng field
+          này cho filter "My Invoices" và mail template nên không bỏ được.
+        - Nhân viên kinh doanh (employee_id): người được GHI NHẬN DOANH THU,
+          là nguồn suy ra phòng ban.
+    -->
     <record id="view_move_form_department" model="ir.ui.view">
         <field name="name">account.move.form.department</field>
         <field name="model">account.move</field>
         <field name="inherit_id" ref="account.view_move_form"/>
         <field name="arch" type="xml">
+            <xpath expr="//page[@name='other_info']//field[@name='invoice_user_id']" position="attributes">
+                <attribute name="string">Salesperson (phụ trách hóa đơn)</attribute>
+            </xpath>
             <xpath expr="//page[@name='other_info']//field[@name='invoice_user_id']" position="after">
+                <field name="employee_id"
+                       options="{'no_create': True, 'no_create_edit': True}"/>
+                <!--
+                    Domain tĩnh thay cho check_company=True: hệ thống 1 công
+                    ty nên constraint _check_company chạy mỗi lần write mà
+                    không mang lại giá trị gì, trong khi domain vẫn lọc đúng
+                    nếu sau này thêm công ty.
+                -->
                 <field name="department_id"
+                       domain="['|', ('company_id', '=', False), ('company_id', 'in', allowed_company_ids)]"
                        options="{'no_create': True, 'no_create_edit': True}"/>
             </xpath>
         </field>
     </record>
 
-    <!-- List hóa đơn: cột ẩn mặc định (optional="hide"), người dùng tự bật
-         qua nút chọn cột - giống cách core làm với Salesperson. -->
+    <!-- List hóa đơn: cột ẩn mặc định, bật qua nút chọn cột - giống cách
+         core làm với Salesperson. -->
     <record id="view_invoice_tree_department" model="ir.ui.view">
         <field name="name">account.move.list.department</field>
         <field name="model">account.move</field>
         <field name="inherit_id" ref="account.view_invoice_tree"/>
         <field name="arch" type="xml">
             <field name="invoice_user_id" position="after">
+                <field name="employee_id" optional="hide"/>
                 <field name="department_id" optional="hide"/>
             </field>
         </field>
     </record>
 
-    <!-- Search hóa đơn: tìm theo phòng ban + Group By "Department"
-         (đặt cạnh Group By "Salesperson"). -->
+    <!-- Search hóa đơn: tìm + Group By theo nhân viên và phòng ban,
+         đặt cạnh Group By "Salesperson" sẵn có. -->
     <record id="view_account_invoice_filter_department" model="ir.ui.view">
         <field name="name">account.move.search.department</field>
         <field name="model">account.move</field>
         <field name="inherit_id" ref="account.view_account_invoice_filter"/>
         <field name="arch" type="xml">
             <field name="invoice_user_id" position="after">
+                <field name="employee_id" string="Nhân viên kinh doanh"/>
                 <field name="department_id" string="Department"/>
             </field>
             <filter name="salesperson" position="after">
+                <filter string="Nhân viên kinh doanh" name="employee"
+                        domain="[]" context="{'group_by': 'employee_id'}"/>
                 <filter string="Department" name="department"
                         domain="[]" context="{'group_by': 'department_id'}"/>
             </filter>
