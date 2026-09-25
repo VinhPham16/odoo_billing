@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- =====================================================================
+         Mở ô "Gói hàng" (product.template.uom_ids) trên form sản phẩm.
+
+         VÌ SAO CẦN: dropdown Đơn vị trên dòng hóa đơn bị giới hạn bởi
+
+             # account/models/account_move_line.py:878
+             @api.depends('product_id', 'product_id.uom_id', 'product_id.uom_ids')
+             def _compute_allowed_uom_ids(self):
+                 for line in self:
+                     line.allowed_uom_ids = line.product_id.uom_id | line.product_id.uom_ids
+
+         Không mở được uom_ids thì dropdown chỉ có đúng một lựa chọn, và cùng một
+         dịch vụ không thể lúc tính theo chuyến, lúc theo khối, lúc theo km.
+
+         VÌ SAO PHẢI TỰ MỞ: trong core, uom_ids trên form template chỉ có một chỗ
+         và nó nằm trong <page string="Sales" invisible="1 or not sale_ok"> VÀ
+         <group string="Upsell & Cross-Sell" invisible="1"> - ẩn cứng hai tầng,
+         dành cho sale/stock mở ra. Deployment này không cài sale/stock.
+
+         VÌ SAO KHÔNG UN-HIDE NODE CORE:
+         (1) page ẩn đó còn chứa description_sale và product_tag_ids, mở page là
+             mở cả chúng;
+         (2) group chứa uom_ids mang nhãn "Upsell & Cross-Sell" - không khớp nội
+             dung, là node còn sót của core. Kế toán sẽ thấy một nhóm tên
+             Upsell & Cross-Sell chứa ô đơn vị tính.
+
+         Sau khi merge, uom_ids xuất hiện hai lần trong view: bản gốc vẫn ẩn, bản
+         này hiện. Hợp lệ - core đang làm đúng vậy với product_uom_id ở
+         account/views/account_move_views.xml:1211 và :1214.
+         ===================================================================== -->
+    <record id="product_template_form_uom_ids" model="ir.ui.view">
+        <field name="name">product.template.form.uom.ids</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_form_view"/>
+        <field name="arch" type="xml">
+
+            <!-- Neo vào <span name="uom_span"> - khối chứa "per [Đơn vị]" ngay
+                 cạnh Giá bán, cũng khai groups="uom.group_uom" nên hai ô hiện
+                 và ẩn cùng nhau. -->
+            <xpath expr="//span[@name='uom_span']" position="after">
+
+                <!-- context BẮT BUỘC, không phải trang trí.
+
+                     Form uom.uom khai readonly dựa trên chính context này:
+
+                         <field name="name"            readonly="(context.get('product_id') or context.get('product_ids')) and id"/>
+                         <field name="relative_factor" readonly="... and id"/>
+                         <field name="relative_uom_id" readonly="... and id"/>
+
+                     Với edit_tags=True, bấm vào một tag sẽ mở form đơn vị. Thiếu
+                     context thì kế toán sửa được Tên / Quantity / Đơn vị tham
+                     chiếu của một đơn vị DÙNG CHUNG cho mọi sản phẩm - đúng
+                     thao tác làm lệch factor và phá đơn giá toàn hệ thống.
+                     Copy nguyên context của core chính là cái khóa đó. -->
+
+                <!-- product_variant_ids PHẢI được khai trước khi context dùng
+                     tới nó. Trong view gốc, product_variant_id và
+                     product_variant_count có node riêng nhưng product_variant_ids
+                     thì KHÔNG - node core thoát được vì nó vô hình nên context
+                     không bao giờ được đánh giá. Node này hiện, nên phải tự khai,
+                     nếu không form sản phẩm lỗi "Unknown field" lúc mở. -->
+                <field name="product_variant_ids" invisible="1"/>
+
+                <field name="uom_ids"
+                       widget="many2many_uom_tags"
+                       options="{'no_quick_create': True, 'edit_tags': True}"
+                       groups="uom.group_uom"
+                       force_save="1"
+                       context="{'product_id': product_variant_id if product_variant_count == 1 else False, 'product_ids': product_variant_ids, 'show_variant_name': product_variant_count > 1}"/>
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>

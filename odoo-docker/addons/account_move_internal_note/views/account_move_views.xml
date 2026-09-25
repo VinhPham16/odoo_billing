@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        Form hóa đơn: Ghi chú nội bộ nằm cuối group "Invoice" (sale_info_group)
+        trong tab "Other Info".
+
+        Chèn position="inside" (cuối group) chứ không bám field cụ thể:
+        account_invoice_department đã chèn employee_id/department_id sau
+        invoice_user_id, bám cuối group thì không phụ thuộc thứ tự cài module.
+
+        Group này của core chỉ hiện với out_invoice / out_refund, nên bill
+        (in_invoice) và bút toán thường không thấy ô này. Bút toán thường đã
+        có ô "internal note" của core (narration, tab Other Info của entry).
+    -->
+    <record id="view_move_form_internal_note" model="ir.ui.view">
+        <field name="name">account.move.form.internal.note</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@id='other_tab']//group[@name='sale_info_group']" position="inside">
+                <field name="internal_note"
+                       placeholder="Không in lên hóa đơn — vd: đi theo lô hàng A, số container..."/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- List hóa đơn: cột ẩn mặc định, bật qua nút chọn cột. -->
+    <record id="view_invoice_tree_internal_note" model="ir.ui.view">
+        <field name="name">account.move.list.internal.note</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_invoice_tree"/>
+        <field name="arch" type="xml">
+            <field name="invoice_origin" position="after">
+                <field name="internal_note" optional="hide"/>
+            </field>
+        </field>
+    </record>
+
+    <!-- Search hóa đơn: tìm theo nội dung ghi chú (ilike),
+         vd gõ "lô hàng A" ra mọi hóa đơn của lô đó. -->
+    <record id="view_account_invoice_filter_internal_note" model="ir.ui.view">
+        <field name="name">account.move.search.internal.note</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_account_invoice_filter"/>
+        <field name="arch" type="xml">
+            <field name="partner_id" position="after">
+                <field name="internal_note"/>
+            </field>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- =====================================================================
+         Form sổ nhật ký: nơi đặt toàn bộ cấu hình của module.
+
+         Mốc xpath là page[@name='bank_account'] — tên trong core hơi lạc đề
+         (string của nó là "Journal Entries") nhưng nó là page đầu tiên của
+         notebook và tồn tại với MỌI loại sổ, kể cả sổ bán. Đã kiểm chứng trên
+         arch đang chạy.
+
+         Nhóm tự ẩn khi type != 'sale' vì chứng từ chi hộ là out_invoice, chỉ
+         sổ bán mới chứa được nó.
+         ===================================================================== -->
+    <record id="view_account_journal_form_chi_ho" model="ir.ui.view">
+        <field name="name">account.journal.form.chi.ho</field>
+        <field name="model">account.journal</field>
+        <field name="inherit_id" ref="account.view_account_journal_form"/>
+        <field name="arch" type="xml">
+
+            <xpath expr="//page[@name='bank_account']" position="inside">
+                <group string="Chi hộ" name="chi_ho_group"
+                       invisible="type != 'sale'">
+                    <field name="is_chi_ho"/>
+                    <!-- Chỉ hỏi sản phẩm sau khi đã tick: hỏi trước thì thừa
+                         một ô trống trên mọi sổ bán khác. -->
+                    <field name="chi_ho_product_id"
+                           invisible="not is_chi_ho"
+                           required="is_chi_ho"
+                           options="{'no_quick_create': True}"/>
+                </group>
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>

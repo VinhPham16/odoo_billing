@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- =====================================================================
+         Ẩn dòng quy đổi đơn vị trên PDF hóa đơn.
+
+         Core in thêm một dòng xám nhỏ dưới số lượng khi đơn vị của dòng khác
+         đơn vị mặc định của sản phẩm (account/views/report_invoice.xml:231):
+
+             <td name="td_quantity">
+                 <span t-field="line.quantity"/>
+                 <span t-field="line.product_uom_id" groups="uom.group_uom"/>
+                 <span t-if="line.product_uom_id != line.product_id.uom_id"
+                       groups="uom.group_uom" class="text-muted small">
+                     <br/>
+                     <t t-set="product_uom_qty"
+                        t-value="line.product_uom_id._compute_quantity(line.quantity, line.product_id.uom_id)"/>
+                     <span t-out="product_uom_qty"/> <span t-field="line.product_id.uom_id"/>
+                 </span>
+             </td>
+
+         Dòng đó có ý nghĩa khi hai đơn vị quy đổi được cho nhau (12 cái = 1 tá).
+         Nhưng thiết kế của deployment này là MỌI đơn vị đều là gốc, factor = 1 -
+         chuyến, khối và km không quy đổi cho nhau được. Nên _compute_quantity
+         trả về đúng con số cũ và khách nhận được:
+
+             5,00 Khối
+             5,00 Chuyến        <- cùng số, khác đơn vị. Vô nghĩa.
+
+         Khối bị xóa không có attribute name, nên class là selector ổn định nhất
+         còn lại. Nếu Odoo đổi markup ở bản sau, xpath GÃY LÚC CÀI - báo lỗi
+         ngay, không hỏng âm thầm trên chứng từ gửi khách.
+
+         DÙNG hasclass() CHỨ KHÔNG PHẢI @class='...': Odoo đánh dấu mọi xpath
+         dạng @class= hoặc contains(@class là error-prone
+         (WRONGCLASS trong addons/base/models/ir_ui_view.py:136) vì so sánh
+         chuỗi class nguyên khối sẽ hụt khi thứ tự class đổi hoặc có class thứ
+         ba chen vào. hasclass('a','b') khớp theo tập class, không theo chuỗi.
+         ===================================================================== -->
+    <template id="report_invoice_document_no_uom_conversion"
+              inherit_id="account.report_invoice_document">
+        <xpath expr="//td[@name='td_quantity']/span[hasclass('text-muted', 'small')]"
+               position="replace"/>
+    </template>
+
+</odoo>
