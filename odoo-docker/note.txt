@@ -1,4 +1,4 @@
-password odoo database: yjhw-jxan-5zwv
+password odoo database: gfnf-sxtm-9cva
 
 
 database: uat_money_flow_tckh
@@ -9,7 +9,20 @@ email: vinhph_test/
 
 
 
+cd ~/Desktop/odoo_billing/odoo-docker
+docker compose stop web
+docker compose run --rm --no-deps web odoo -d uat_money_flow_tckh -i account_financial_report --stop-after-init
+docker compose start web
 
 
+docker compose down -v
+docker compose up -d
 
 
+cd ~/Desktop/odoo_billing/odoo-docker
+docker compose stop web
+docker compose run --rm --no-deps web odoo \
+  -d uat_money_flow_tckh \
+  -i account_financial_report,account_partner_company_filter,account_send_draft_invoice,bidv_currency_rate,date_range,report_xlsx \
+  --stop-after-init
+docker compose start web
