@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_account_invoice_adjustment_form" model="ir.ui.view">
+        <field name="name">account.invoice.adjustment.form</field>
+        <field name="model">account.invoice.adjustment</field>
+        <field name="arch" type="xml">
+            <form string="Điều chỉnh hóa đơn">
+                <field name="move_payment_state" invisible="1"/>
+                <field name="move_is_debit_note" invisible="1"/>
+
+                <group>
+                    <group>
+                        <field name="move_id" options="{'no_open': True}"/>
+                        <field name="adjustment_type" widget="radio"/>
+                    </group>
+                    <group>
+                        <field name="date"/>
+                        <field name="journal_id" options="{'no_create': True}"/>
+                    </group>
+                </group>
+
+                <!-- Cảnh báo theo loại điều chỉnh. Cùng logic với prototype. -->
+                <div class="alert alert-info" role="alert"
+                     invisible="adjustment_type != 'decrease'">
+                    Giấy báo có sinh ra ở trạng thái <b>nháp</b>, đã copy đủ dòng.
+                    Sửa còn đúng phần chênh lệch rồi Xác nhận — Odoo <b>tự đối trừ</b>
+                    với hóa đơn gốc ngay khi vào sổ, không cần bấm <i>Add</i> ở mục
+                    Khoản chưa phân bổ.
+                </div>
+
+                <div class="alert alert-warning" role="alert"
+                     invisible="adjustment_type != 'increase'">
+                    <b>Điều chỉnh tăng</b> tạo <b>Giấy báo nợ</b> — bút toán cùng chiều
+                    với hóa đơn gốc nên <b>không khấu trừ</b> vào dư nợ của nó. Công nợ
+                    khách sẽ nằm trên hai chứng từ; khi thu tiền phải chọn <b>cả hai</b>
+                    rồi Đăng ký thanh toán một lần.
+                </div>
+
+                <div class="alert alert-info" role="alert"
+                     invisible="adjustment_type != 'info'">
+                    Sai <b>tên/địa chỉ người mua mà không sai MST</b> thì <b>không cần</b>
+                    lập hóa đơn điều chỉnh — chỉ gửi Mẫu 04/SS-HĐĐT. Chỉ dùng lựa chọn này
+                    khi sai <b>tên hàng hóa</b>, quy cách, chất lượng. Chứng từ tạo ra có
+                    giá trị 0 và sẽ hiện nhãn "Đã thanh toán" ngay khi vào sổ.
+                </div>
+
+                <div class="alert alert-warning" role="alert"
+                     invisible="adjustment_type != 'replace'">
+                    <b>Thay thế</b> sẽ <b>hủy toàn bộ</b> hóa đơn gốc: tạo giấy báo có
+                    toàn phần, vào sổ ngay, tự đối trừ, hóa đơn gốc chuyển trạng thái
+                    <i>Đã hoàn tác</i>. Chỉ dùng khi hóa đơn gốc sai toàn diện.
+                </div>
+
+                <!-- Hai cảnh báo chặn: nói trước khi người dùng bấm, thay vì để
+                     action_apply raise sau. Guard trong Python vẫn giữ nguyên. -->
+                <div class="alert alert-danger" role="alert"
+                     invisible="adjustment_type != 'replace' or move_payment_state not in ('paid', 'partial', 'in_payment')">
+                    Hóa đơn gốc <b>đã phát sinh thanh toán</b> — không thay thế được.
+                    Thao tác này sẽ gỡ sạch đối trừ và khiến khoản đã thu trôi nổi.
+                    Gỡ đối trừ thanh toán trước, hoặc dùng Điều chỉnh giảm / tăng.
+                </div>
+
+                <div class="alert alert-danger" role="alert"
+                     invisible="adjustment_type != 'increase' or not move_is_debit_note">
+                    Chứng từ gốc <b>bản thân nó đã là giấy báo nợ</b> — không lập tiếp
+                    giấy báo nợ chồng lên được. Quay về điều chỉnh trên hóa đơn gốc.
+                </div>
+
+                <group>
+                    <field name="reason" nolabel="0"
+                           placeholder="Điều chỉnh cho hóa đơn Mẫu số... ký hiệu... số... ngày..."/>
+                </group>
+
+                <group string="Văn bản thỏa thuận với người mua (TT 91/2026)">
+                    <field name="agreement_name" placeholder="Số/tên biên bản"/>
+                    <field name="agreement_date"/>
+                </group>
+
+                <footer>
+                    <button name="action_apply" type="object"
+                            string="Tạo chứng từ điều chỉnh"
+                            class="btn-primary" data-hotkey="q"/>
+                    <button string="Hủy" special="cancel"
+                            class="btn-secondary" data-hotkey="x"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+</odoo>

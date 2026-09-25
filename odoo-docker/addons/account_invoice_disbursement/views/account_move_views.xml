@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- =====================================================================
+         Form hóa đơn.
+
+         Cả ba mốc xpath dưới đây đều đã được kiểm chứng trên arch đang chạy
+         của account.view_move_form:
+           - //header/button[@name='action_reverse']
+           - //div[@name='button_box']
+           - //page[@id='other_tab']/group[@id='other_tab_group']
+
+         Module account_invoice_adjustment cũng chèn nút vào trước
+         action_reverse. Hai module không xung đột: cả hai đều bám node của
+         core chứ không bám node của nhau, nên không cần khai depends lẫn nhau.
+         Thứ tự hiển thị hai nút do thứ tự inherit quyết định.
+         ===================================================================== -->
+    <record id="view_move_form_chi_ho" model="ir.ui.view">
+        <field name="name">account.move.form.chi.ho</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="arch" type="xml">
+
+            <!-- 1. Nút tạo, đặt TRƯỚC nút Giấy báo có của core.
+
+                 groups là account.group_account_invoice chứ không phải
+                 group_account_manager: đây chính là lý do module tồn tại.
+                 account_invoice_adjustment đã lùi action_debit_note về nhóm
+                 Kế toán trưởng, nên cách làm cũ (mượn nút Giấy báo nợ để lập
+                 chi hộ) đã khóa mất kế toán viên thường.
+
+                 Điều kiện ẩn có ba vế, vế thứ ba quan trọng nhất: is_chi_ho
+                 làm nút biến mất trên chính chứng từ chi hộ, chặn chi hộ chồng
+                 chi hộ ngay ở tầng nhìn thay vì đợi UserError. -->
+            <button name="action_reverse" position="before">
+                <button name="action_create_chi_ho" type="object"
+                        string="Tạo chứng từ chi hộ" class="btn-secondary"
+                        groups="account.group_account_invoice"
+                        invisible="move_type != 'out_invoice' or state != 'posted' or is_chi_ho"
+                        data-hotkey="shift+h"/>
+            </button>
+
+            <!-- 2. Banner cảnh báo thuế.
+
+                 Khoản chi hộ thuần túy KHÔNG kê khai, tính nộp thuế GTGT
+                 (điểm d khoản 7 Điều 5 TT 219/2013/TT-BTC). Sản phẩm chi hộ
+                 không gắn thuế, nhưng kế toán vẫn chọn tay được thuế 10% vào ô
+                 Thuế trên dòng và core không có gì ngăn - với Odoo đó là một
+                 hóa đơn bán hợp lệ.
+
+                 Nếu để lọt, bút toán từ 2 dòng thành 3 và sai ba chỗ cùng lúc:
+                 khai khống VAT đầu ra lên tờ khai; số thu của khách lớn hơn số
+                 đã chi cho bên thứ ba nên tài khoản 138 không bao giờ tất toán
+                 về 0; và sai quy định.
+
+                 Cố ý CHỈ cảnh báo, không chặn Xác nhận. Đặt trước button_box
+                 nên nó nằm ngay đầu sheet, thấy trước khi cuộn.
+
+                 Giới hạn: đây là cảnh báo thuần UI, không bắt được bản ghi tạo
+                 qua import/RPC. Muốn chặn thật phải chuyển thành @api.constrains. -->
+            <xpath expr="//div[@name='button_box']" position="before">
+                <div class="alert alert-warning" role="alert"
+                     invisible="not chi_ho_tax_warning">
+                    Chứng từ chi hộ đang có dòng gắn thuế GTGT. Khoản chi hộ
+                    thuần túy không kê khai, tính nộp thuế GTGT (điểm d khoản 7
+                    Điều 5 TT 219/2013/TT-BTC). Kiểm tra lại trước khi vào sổ.
+                </div>
+            </xpath>
+
+            <!-- 3. Smart button điều hướng ngược: từ hóa đơn gốc sang các
+                 chứng từ chi hộ của nó.
+
+                 Dùng fa-money chứ không fa-hand-holding-usd: Odoo ship
+                 FontAwesome 4.7, icon kia chỉ có từ FA5 và sẽ ra ô trống. -->
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_chi_ho" type="object"
+                        class="oe_stat_button" icon="fa-money"
+                        invisible="chi_ho_count == 0">
+                    <field name="chi_ho_count" widget="statinfo"
+                           string="Chứng từ chi hộ"/>
+                </button>
+            </xpath>
+
+            <!-- 4. Nhóm Chi hộ trong tab "Thông tin khác".
+
+                 Group riêng chứ KHÔNG chèn cạnh invoice_origin: field đó nằm
+                 trong group[@id='sale_info_group'], mà group đó invisible khi
+                 move_type not in ('out_invoice','out_refund'). Group riêng thì
+                 tự quản được điều kiện hiện/ẩn của chính nó.
+
+                 chi_ho_origin_id đã readonly=True ở tầng Python nên không cần
+                 readonly="1" ở đây; giá trị duy nhất ghi vào nó là từ
+                 action_create_chi_ho(). -->
+            <xpath expr="//page[@id='other_tab']/group[@id='other_tab_group']" position="inside">
+                <group string="Chi hộ" name="chi_ho_group"
+                       invisible="not is_chi_ho and not chi_ho_origin_id">
+                    <field name="chi_ho_origin_id"
+                           invisible="not chi_ho_origin_id"/>
+                </group>
+            </xpath>
+
+        </field>
+    </record>
+
+    <!-- =====================================================================
+         List hóa đơn: cột "Chi hộ cho hóa đơn", ẩn mặc định.
+
+         Chèn sau invoice_origin vì hai cột này bổ sung cho nhau - cùng trả lời
+         "chứng từ này gắn với hóa đơn nào", một cái là text tự do, một cái là
+         liên kết thật.
+         ===================================================================== -->
+    <record id="view_invoice_tree_chi_ho" model="ir.ui.view">
+        <field name="name">account.move.list.chi.ho</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_invoice_tree"/>
+        <field name="arch" type="xml">
+            <field name="invoice_origin" position="after">
+                <field name="chi_ho_origin_id" optional="hide"
+                       string="Chi hộ cho hóa đơn"/>
+            </field>
+        </field>
+    </record>
+
+    <!-- Filter soát cuối kỳ: mọi chứng từ nằm trong sổ chi hộ.
+
+         Lọc theo journal_id.is_chi_ho chứ không theo chi_ho_origin_id != False:
+         chứng từ chi hộ lập độc lập, không gắn hóa đơn nào, vẫn phải lọt vào
+         bộ lọc này. -->
+    <record id="view_account_invoice_filter_chi_ho" model="ir.ui.view">
+        <field name="name">account.invoice.select.chi.ho</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_account_invoice_filter"/>
+        <field name="arch" type="xml">
+            <filter name="out_refund" position="after">
+                <filter string="Chứng từ chi hộ" name="chi_ho_filter"
+                        domain="[('journal_id.is_chi_ho', '=', True)]"/>
+            </filter>
+        </field>
+    </record>
+
+</odoo>

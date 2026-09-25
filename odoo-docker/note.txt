@@ -3,7 +3,7 @@ password odoo database: yjhw-jxan-5zwv
 
 database: uat_money_flow_tckh
 
-email: uat_admin/123456
+email: admin/123456
 
 email: vinhph_test/
 
