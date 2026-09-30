@@ -22,8 +22,8 @@ có gì chặn *Đặt lại nháp*.
 - **Hộp xác nhận trước khi vào sổ**, nhắc rằng thao tác này một chiều.
 - Một nút **Điều chỉnh hóa đơn** trên hóa đơn đã vào sổ, mở wizard hỏi loại
   điều chỉnh rồi gọi đúng cơ chế core.
-- Bốn field metadata trên chứng từ sinh ra: loại điều chỉnh, văn bản thỏa
-  thuận, ngày văn bản, và hóa đơn được thay thế.
+- Năm field metadata trên chứng từ sinh ra: loại điều chỉnh, **mã nguyên nhân**,
+  văn bản thỏa thuận, ngày văn bản, và hóa đơn được thay thế.
 - **Chặn *Đặt lại nháp*** trên hóa đơn bán đã vào sổ; kế toán trưởng vẫn qua được.
 - Hai nút *Giấy báo có* / *Giấy báo nợ* gốc lùi về nhóm Kế toán trưởng.
 - Cột và filter *Chứng từ điều chỉnh* trên màn danh sách hóa đơn.
@@ -77,6 +77,45 @@ Module hóa đơn điện tử chính thức của Odoo (`l10n_vn_edi_viettel`) 
 
 **Mỗi bản ghi chỉ mang đúng một trong ba link, không bao giờ ghi song song.** Đó
 là điều kiện làm cho câu `COALESCE` ở phần Đối chiếu bên dưới đúng.
+
+### Mã nguyên nhân (`cause`) — bắt buộc để đẩy sang hệ thống HĐĐT mẹ
+
+Hóa đơn pháp lý phát hành từ hệ thống HĐĐT của công ty mẹ (VNPOST). API điều
+chỉnh (`POST /partners/invoices/adjustments`) và thay thế
+(`POST /partners/invoices/replacements`) của mẹ đều **bắt buộc** trường `cause` —
+mã nguyên nhân 2 chữ số theo **Phụ lục XVII, Quyết định 1233** của Cục Thuế (dẫn
+chiếu các điểm/khoản Điều 10 TT 91/2026/TT-BTC). Trường `reason` (mô tả tự do)
+không thay thế được mã này.
+
+Vì vậy `cause` là **bắt buộc** trên wizard điều phối (mọi luồng của wizard đều là
+điều chỉnh hoặc thay thế), và được đổ xuống chứng từ sinh ra qua cùng ba hook với
+các field thỏa thuận. Trên hai wizard core (`account.move.reversal`,
+`account.debit.note`) field để **không** required/default, nên nút *Giấy báo có* /
+*Giấy báo nợ* gốc của kế toán trưởng không bị ép nhập.
+
+Value lưu là chuỗi 2 chữ số `'01'..'14'` khớp spec của mẹ; connector đồng bộ về
+sau ép về Number khi gửi. `cause` **không** thêm cột `adjustType`/`invoiceType`:
+hai giá trị đó của mẹ suy tất định từ `adjustment_type` đã lưu
+(`decrease→(2,2)`, `increase→(2,1)`, `info→(2,3)`, `replace→invoiceType 3`).
+
+Danh mục 14 mã (nguyên văn Phụ lục XVII):
+
+| Mã | Nguyên nhân | Căn cứ |
+|---|---|---|
+| 01 | Điều chỉnh giá trị quyết toán dự án đầu tư khi có thay đổi về đơn giá, khối lượng; điều chỉnh giá bán theo quy định của pháp luật chuyên ngành | Điểm a.1 khoản 5 Điều 10 TT 91 |
+| 02 | Điều chỉnh giá trị, khối lượng trên cơ sở kết luận của cơ quan nhà nước có thẩm quyền theo quy định của pháp luật có liên quan | Điểm a.2 khoản 5 Điều 10 TT 91 |
+| 03 | Điều chỉnh giá bán buôn điện giữa EVN với các Tổng công ty Điện lực và giữa các Tổng công ty Điện lực với các Công ty Điện lực | Điểm a.3 khoản 5 Điều 10 TT 91 |
+| 04 | Điều chỉnh do chiết khấu thương mại | Điểm b khoản 5 Điều 10 TT 91 |
+| 05 | Điều chỉnh do trả lại hàng hóa không phải là tài sản thuộc diện phải đăng ký quyền sử dụng, quyền sở hữu | Điểm c.1 khoản 5 Điều 10 TT 91 |
+| 06 | Thay thế do trả lại hàng hóa là tài sản thuộc diện phải đăng ký quyền sử dụng, quyền sở hữu và tài sản đã đăng ký theo tên người mua | Điểm c.2 khoản 5 Điều 10 TT 91 |
+| 07 | Điều chỉnh do hoàn phí, giảm phí, giảm hoa hồng môi giới bảo hiểm và các khoản chi để giảm thu khác theo pháp luật kinh doanh bảo hiểm | Điểm c.3 khoản 5 Điều 10 TT 91 |
+| 08 | Điều chỉnh do hủy hoặc chấm dứt giao dịch và hủy một phần việc cung cấp dịch vụ khi thu tiền trước cho nhiều kỳ | Điểm c.4 khoản 5 Điều 10 TT 91 |
+| 09 | Điều chỉnh do hoàn phí của tổ chức tín dụng, tổ chức cung ứng dịch vụ thanh toán không dùng tiền mặt đã lập hóa đơn thu phí dịch vụ | Điểm d khoản 5 Điều 10 TT 91 |
+| 10 | Điều chỉnh đối với dịch vụ viễn thông dùng thẻ trả trước dịch vụ viễn thông di động theo quy định của pháp luật | Điểm đ khoản 5 Điều 10 TT 91 |
+| 11 | Điều chỉnh do thay đổi giá trị bán khí thiên nhiên thực tế do phải quy đổi ra Việt Nam đồng khi thanh toán thực tế | Điểm e khoản 5 Điều 10 TT 91 |
+| 12 | Điều chỉnh đối với hóa đơn đổi, hoàn chứng từ vận chuyển hàng không | Điểm d khoản 1 Điều 10 TT 91 |
+| 13 | Điều chỉnh/thay thế cho hóa đơn đã lập sai | Điều 10 TT 91 |
+| 14 | Thay thế hóa đơn điện tử đã lập sai là hóa đơn điện tử từ máy tính tiền | Điểm c khoản 1 Điều 10 TT 91 |
 
 ### Vì sao chặn bằng `_need_cancel_request`, không override `button_draft`
 

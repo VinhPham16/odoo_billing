@@ -1,6 +1,6 @@
 from odoo import fields, models
 
-from .account_move import ADJUSTMENT_TYPES
+from .account_move import ADJUSTMENT_TYPES, CAUSE_SELECTION
 
 
 class AccountDebitNote(models.TransientModel):
@@ -19,6 +19,10 @@ class AccountDebitNote(models.TransientModel):
         ADJUSTMENT_TYPES, string='Loại điều chỉnh')
     adjustment_agreement_name = fields.Char(string='Văn bản thỏa thuận')
     adjustment_agreement_date = fields.Date(string='Ngày văn bản thỏa thuận')
+    # KHÔNG required/default: nút "Giấy báo nợ" gốc vẫn dùng được, chỉ propagate
+    # khi wizard điều phối đã đóng dấu adjustment_type.
+    cause = fields.Selection(
+        CAUSE_SELECTION, string='Nguyên nhân điều chỉnh/thay thế')
 
     def _prepare_default_values(self, move):
         """Hook core -> dict đi vào move.copy() tạo GIẤY BÁO NỢ."""
@@ -29,5 +33,6 @@ class AccountDebitNote(models.TransientModel):
                 'adjustment_type': self.adjustment_type,
                 'adjustment_agreement_name': self.adjustment_agreement_name,
                 'adjustment_agreement_date': self.adjustment_agreement_date,
+                'cause': self.cause,
             })
         return values

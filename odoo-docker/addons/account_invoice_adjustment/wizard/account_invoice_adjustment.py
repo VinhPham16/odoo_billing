@@ -1,7 +1,7 @@
 from odoo import Command, _, api, fields, models
 from odoo.exceptions import UserError
 
-from ..models.account_move import ADJUSTMENT_TYPES
+from ..models.account_move import ADJUSTMENT_TYPES, CAUSE_SELECTION
 
 
 class AccountInvoiceAdjustment(models.TransientModel):
@@ -35,6 +35,12 @@ class AccountInvoiceAdjustment(models.TransientModel):
         string='Lý do', required=True,
         help='In lên chứng từ điều chỉnh. TT 91/2026/TT-BTC yêu cầu ghi rõ '
              '"Điều chỉnh cho hóa đơn Mẫu số... ký hiệu... số... ngày...".')
+    # required=True vì MỌI luồng của wizard đều là điều chỉnh/thay thế
+    # (invoiceType 2 hoặc 3 bên mẹ) - đều bắt buộc mã nguyên nhân. Khác với field
+    # cùng tên trên hai wizard core: ở đó không required để nút gốc của kế toán
+    # trưởng không bị ép.
+    cause = fields.Selection(
+        CAUSE_SELECTION, string='Nguyên nhân điều chỉnh/thay thế', required=True)
     agreement_name = fields.Char(string='Số/tên văn bản thỏa thuận')
     agreement_date = fields.Date(string='Ngày văn bản thỏa thuận')
 
@@ -70,6 +76,7 @@ class AccountInvoiceAdjustment(models.TransientModel):
             'adjustment_type': self.adjustment_type,
             'adjustment_agreement_name': self.agreement_name,
             'adjustment_agreement_date': self.agreement_date,
+            'cause': self.cause,
         }
         journal = self.journal_id or move.journal_id
 

@@ -9,6 +9,31 @@ ADJUSTMENT_TYPES = [
     ('replace', 'Thay thế hóa đơn'),
 ]
 
+# Mã nguyên nhân điều chỉnh/thay thế - Phụ lục XVII, Quyết định 1233 của Cục Thuế
+# (dẫn chiếu các điểm/khoản Điều 10 TT 91/2026/TT-BTC). Hệ thống HĐĐT công ty mẹ
+# (VNPOST) BẮT BUỘC trường `cause` này ở cả API điều chỉnh lẫn thay thế.
+#
+# Value là chuỗi 2 chữ số khớp spec "2 chữ số" của mẹ; connector sẽ ép về Number
+# khi gửi. Label rút gọn cho dropdown - nguyên văn pháp lý đầy đủ nằm ở README.
+# Giữ một nguồn duy nhất ở đây để wizard và ba model không lệch nhau, giống
+# ADJUSTMENT_TYPES.
+CAUSE_SELECTION = [
+    ('01', '01 – Điều chỉnh giá trị quyết toán dự án đầu tư / giá bán theo pháp luật chuyên ngành'),
+    ('02', '02 – Điều chỉnh theo kết luận của cơ quan nhà nước có thẩm quyền'),
+    ('03', '03 – Điều chỉnh giá bán buôn điện nội bộ EVN'),
+    ('04', '04 – Điều chỉnh do chiết khấu thương mại'),
+    ('05', '05 – Điều chỉnh do trả lại hàng (không phải tài sản đăng ký quyền sở hữu)'),
+    ('06', '06 – Thay thế do trả lại hàng là tài sản phải đăng ký quyền sở hữu'),
+    ('07', '07 – Điều chỉnh do hoàn/giảm phí, hoa hồng môi giới bảo hiểm'),
+    ('08', '08 – Điều chỉnh do hủy/chấm dứt dịch vụ thu tiền trước nhiều kỳ'),
+    ('09', '09 – Điều chỉnh do hoàn phí dịch vụ thanh toán không dùng tiền mặt'),
+    ('10', '10 – Điều chỉnh dịch vụ viễn thông dùng thẻ trả trước'),
+    ('11', '11 – Điều chỉnh giá khí thiên nhiên quy đổi VNĐ khi thanh toán'),
+    ('12', '12 – Điều chỉnh hóa đơn đổi/hoàn chứng từ vận chuyển hàng không'),
+    ('13', '13 – Điều chỉnh/thay thế cho hóa đơn đã lập sai'),
+    ('14', '14 – Thay thế HĐĐT lập sai từ máy tính tiền'),
+]
+
 
 class AccountMove(models.Model):
     _inherit = 'account.move'
@@ -35,6 +60,19 @@ class AccountMove(models.Model):
     adjustment_agreement_date = fields.Date(
         string='Ngày văn bản thỏa thuận',
         copy=False,
+    )
+    # BẮT BUỘC khi đẩy sang hệ thống HĐĐT mẹ (API điều chỉnh/thay thế). Luôn NULL
+    # trên hóa đơn gốc; chỉ có giá trị trên chứng từ điều chỉnh. copy=False cùng
+    # lý do như các field trên: bấm Duplicate không được kéo theo mã nguyên nhân.
+    cause = fields.Selection(
+        CAUSE_SELECTION,
+        string='Nguyên nhân điều chỉnh/thay thế',
+        copy=False,
+        tracking=True,
+        help='Mã nguyên nhân theo Phụ lục XVII, Quyết định 1233 của Cục Thuế '
+             '(dẫn chiếu Điều 10 TT 91/2026/TT-BTC). Hệ thống HĐĐT công ty mẹ '
+             'bắt buộc mã này ở cả nghiệp vụ điều chỉnh lẫn thay thế. Danh mục '
+             'đầy đủ 14 mã kèm nguyên văn pháp lý xem ở README của module.',
     )
     # Vì sao phải là field riêng, không tái dùng reversed_entry_id:
     # hóa đơn thay thế được tạo bằng copy_data() chứ không qua _reverse_moves(),

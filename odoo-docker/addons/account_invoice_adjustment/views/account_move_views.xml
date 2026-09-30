@@ -100,6 +100,8 @@
                        invisible="not adjustment_type and not replacement_origin_id">
                     <field name="adjustment_type" readonly="1"
                            invisible="not adjustment_type"/>
+                    <field name="cause" readonly="1"
+                           invisible="not cause"/>
                     <field name="replacement_origin_id" readonly="1"
                            invisible="not replacement_origin_id"/>
                     <field name="adjustment_agreement_name" readonly="1"

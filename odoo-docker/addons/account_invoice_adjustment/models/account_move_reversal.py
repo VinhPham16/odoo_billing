@@ -1,7 +1,7 @@
 from odoo import _, fields, models
 from odoo.exceptions import UserError
 
-from .account_move import ADJUSTMENT_TYPES
+from .account_move import ADJUSTMENT_TYPES, CAUSE_SELECTION
 
 
 class AccountMoveReversal(models.TransientModel):
@@ -22,6 +22,10 @@ class AccountMoveReversal(models.TransientModel):
         ADJUSTMENT_TYPES, string='Loại điều chỉnh')
     adjustment_agreement_name = fields.Char(string='Văn bản thỏa thuận')
     adjustment_agreement_date = fields.Date(string='Ngày văn bản thỏa thuận')
+    # KHÔNG required/default: nút "Giấy báo có" gốc (kế toán trưởng) vẫn dùng
+    # được, chỉ propagate khi wizard điều phối đã đóng dấu adjustment_type.
+    cause = fields.Selection(
+        CAUSE_SELECTION, string='Nguyên nhân điều chỉnh/thay thế')
 
     def _prepare_default_reversal(self, move):
         """Hook core -> dict áp lên GIẤY BÁO CÓ sắp tạo."""
@@ -32,6 +36,7 @@ class AccountMoveReversal(models.TransientModel):
                 'adjustment_type': self.adjustment_type,
                 'adjustment_agreement_name': self.adjustment_agreement_name,
                 'adjustment_agreement_date': self.adjustment_agreement_date,
+                'cause': self.cause,
             })
         return values
 
@@ -44,6 +49,7 @@ class AccountMoveReversal(models.TransientModel):
                 'adjustment_type': self.adjustment_type,
                 'adjustment_agreement_name': self.adjustment_agreement_name,
                 'adjustment_agreement_date': self.adjustment_agreement_date,
+                'cause': self.cause,
                 # Chỉ ở đây mới gán được: copy_data() không sinh
                 # reversed_entry_id, nên đây là đường link duy nhất từ hóa đơn
                 # thay thế về hóa đơn gốc.

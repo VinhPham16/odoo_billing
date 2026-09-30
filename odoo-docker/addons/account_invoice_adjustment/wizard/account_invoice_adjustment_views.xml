@@ -70,6 +70,7 @@
                 <group>
                     <field name="reason" nolabel="0"
                            placeholder="Điều chỉnh cho hóa đơn Mẫu số... ký hiệu... số... ngày..."/>
+                    <field name="cause"/>
                 </group>
 
                 <group string="Văn bản thỏa thuận với người mua (TT 91/2026)">

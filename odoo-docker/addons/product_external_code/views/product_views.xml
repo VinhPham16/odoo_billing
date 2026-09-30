@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- =====================================================================
+         Form sản phẩm (template): thêm ô "External Product Code" ngay sau
+         Internal Reference (default_code).
+
+         default_code TRÊN FORM TEMPLATE không nằm ở view gốc
+         product.product_template_form_view mà được view
+         product.product_template_only_form_view chèn vào (sau categ_id), nên
+         phải inherit đúng view đó thì mới neo được vào default_code.
+
+         invisible khi product_variant_count > 1: khi có nhiều biến thể, mã là
+         thuộc tính riêng của từng biến thể -> ẩn ở form template và nhập ở form
+         biến thể bên dưới (giống cách core ẩn default_code/barcode).
+         ===================================================================== -->
+    <record id="product_template_form_external_code" model="ir.ui.view">
+        <field name="name">product.template.form.external.code</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_only_form_view"/>
+        <field name="arch" type="xml">
+            <field name="default_code" position="after">
+                <field name="external_product_code"
+                       invisible="product_variant_count &gt; 1"/>
+            </field>
+        </field>
+    </record>
+
+    <!-- =====================================================================
+         Form biến thể (product.product): cho phép nhập mã riêng cho từng biến
+         thể khi một template có nhiều biến thể.
+         ===================================================================== -->
+    <record id="product_normal_form_external_code" model="ir.ui.view">
+        <field name="name">product.product.form.external.code</field>
+        <field name="model">product.product</field>
+        <field name="inherit_id" ref="product.product_normal_form_view"/>
+        <field name="arch" type="xml">
+            <field name="default_code" position="after">
+                <field name="external_product_code"/>
+            </field>
+        </field>
+    </record>
+
+</odoo>
