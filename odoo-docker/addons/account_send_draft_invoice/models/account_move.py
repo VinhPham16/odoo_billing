@@ -54,9 +54,13 @@ class AccountMove(models.Model):
             "res_id": self.id,
         })
 
-        # 3) Nạp template email hóa đơn có sẵn (nếu có).
+        # 3) Nạp template email RIÊNG cho bản nháp (proforma).
+        #    KHÔNG dùng account.email_template_edi_invoice (template hóa đơn ĐÃ
+        #    phát hành) vì nội dung/tiêu đề sai với bản nháp. Nội dung template
+        #    này sửa được trên UI: Technical > Email > Templates.
         template = self.env.ref(
-            "account.email_template_edi_invoice", raise_if_not_found=False
+            "account_send_draft_invoice.mail_template_send_draft_invoice",
+            raise_if_not_found=False,
         )
 
         # 4) Mở mail composer với PDF đính kèm sẵn.

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- noupdate="1": nâng cấp module sẽ KHÔNG ghi đè, giữ nguyên chỉnh sửa
+         nội dung bạn làm trên UI (Technical > Email > Templates). -->
+    <data noupdate="1">
+        <!-- Template email riêng cho nút "Send Draft" (proforma).
+             KHÔNG dùng account.email_template_edi_invoice (template hóa đơn ĐÃ
+             phát hành) vì tiêu đề/nội dung tham chiếu hóa đơn chính thức, sai với
+             bản nháp. Sửa Subject / Body trực tiếp trên UI sau khi cài. -->
+        <record id="mail_template_send_draft_invoice" model="mail.template">
+            <field name="name">Hóa đơn nháp (Proforma) - Gửi khách</field>
+            <field name="model_id" ref="account.model_account_move"/>
+            <field name="subject">Hóa đơn nháp (Proforma) - {{ object.partner_id.name or '' }}</field>
+            <field name="email_from">{{ (object.company_id.email_formatted or user.email_formatted or '') }}</field>
+            <field name="partner_to">{{ object.partner_id.id }}</field>
+            <field name="lang">{{ object.partner_id.lang }}</field>
+            <field name="auto_delete" eval="True"/>
+            <field name="body_html" type="html">
+                <div style="margin:0px;padding:0px;font-size:13px;">
+                    <p>Kính gửi <t t-out="object.partner_id.name or ''">Quý khách</t>,</p>
+                    <p>
+                        Công ty <t t-out="object.company_id.name or ''">chúng tôi</t> xin gửi Quý khách
+                        <strong>hóa đơn nháp (proforma)</strong> trong tệp đính kèm để rà soát trước khi
+                        phát hành hóa đơn điện tử chính thức.
+                    </p>
+                    <p>
+                        Vui lòng kiểm tra thông tin và phản hồi nếu cần điều chỉnh. Đây là
+                        <em>bản nháp</em>, chưa có giá trị pháp lý thay cho hóa đơn chính thức.
+                    </p>
+                    <p style="margin-top:16px;">
+                        Trân trọng,<br/>
+                        <t t-out="object.company_id.name or ''">Công ty</t>
+                    </p>
+                </div>
+            </field>
+        </record>
+    </data>
+</odoo>

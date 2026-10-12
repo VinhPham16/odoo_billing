@@ -5,6 +5,7 @@
     'category': 'Accounting/Accounting',
     'depends': ['account', 'mail'],
     'data': [
+        'data/mail_template_send_draft_invoice.xml',
         'report/report_draft_invoice.xml',
         'views/account_move_views.xml',
     ],
