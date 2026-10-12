@@ -5,6 +5,7 @@
     'category': 'Accounting/Accounting',
     'depends': ['account', 'mail'],
     'data': [
+        'report/report_draft_invoice.xml',
         'views/account_move_views.xml',
     ],
     'license': 'LGPL-3',

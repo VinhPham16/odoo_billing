@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8"/>
+<title>Preview hóa đơn draft — tự test CSS</title>
+<!--
+  ============================================================================
+  FILE TỰ TEST CSS. Đặt file này cùng thư mục với logo.png & background.png
+  (đang ở: static/src/img/). Mở bằng Chrome. Sửa phần <style> bên dưới, rồi
+  Ctrl+P -> "Save as PDF", khổ A4, BẬT "Background graphics" để xem gần giống
+  bản Odoo. Khi ưng, gửi lại cho tôi phần <style> (hoặc dòng đã đổi) để tôi áp
+  vào module. CSS dưới đây ĐỒNG BỘ với module (report_draft_invoice.xml).
+
+  >>> Chỗ chỉnh VIỀN (câu hỏi "bỏ bottom border cho các block"):
+      - Khung chung header+người bán/mua:  .dinv-info   (đang border-bottom:none)
+      - Bảng kê:                           .dinv-lines  (border 1.5 cả 4 cạnh)
+      - Số tiền bằng chữ:                  .dinv-inwords (border-top:none)
+      - Bảng tổng thuế:                    .dinv-taxsum  (border-top:none)
+      - Chữ ký (đóng đáy khung):           .dinv-sign    (border-top:none)
+      Muốn "bỏ bottom border" cho block nào -> thêm 'border-bottom:none;' vào
+      rule tương ứng, rồi xem lại.
+  ============================================================================
+-->
+<style>
+  /* ---- Khung A4 để xem trong trình duyệt (CHỈ dùng cho preview) ---- */
+  body { background:#9aa0a6; margin:0; padding:16px 0; }
+  .sheet { width:210mm; min-height:297mm; margin:0 auto; background:#fff;
+           padding:10mm 8mm 10mm 12mm; box-sizing:border-box; box-shadow:0 0 8px rgba(0,0,0,.4); }
+
+  /* ====== CSS ĐỒNG BỘ VỚI MODULE (từ đây trở xuống) ====== */
+  .dinv-page { position:relative; z-index:0;
+      font-family:Arial,"Liberation Sans","DejaVu Sans","Odoo Unicode Support Noto",sans-serif;
+      font-size:11px; color:#000; line-height:1.3; }
+  .dinv-page table { margin:0; border-spacing:0; }
+
+  .dinv-provider { text-align:center; font-style:italic; font-size:10px;
+      border-bottom:1px dashed #000; padding-bottom:2px; margin-bottom:4px; }
+
+  /* Khung chung bao HEADER + người bán/mua */
+  .dinv-info { border:1.5px solid #000; border-bottom:none; }
+
+  /* HEADER */
+  .dinv-head { width:100%; border-collapse:collapse; border:none; border-bottom:1px solid #000; }
+  .dinv-head td { border:0; vertical-align:middle; padding:4px 10px; }
+  .dinv-head-logo { width:26%; text-align:center; }
+  .dinv-logo { height:60px; width:auto; margin-left:-10px; }
+  .dinv-head td.dinv-head-title { text-align:center; padding:4mm 10mm 10mm 0mm; }
+  .dinv-title-vi { color:#0a4a8f; font-size:21px; font-weight:700; }
+  .dinv-title-en { color:#0a4a8f; font-size:16px; font-weight:700; margin-top:2px; }
+  .dinv-date { padding-top:10px; font-size:12px; }
+  .dinv-dmy { border-bottom:1px solid #000; padding:0 8px; font-weight:normal; }
+  .dinv-head-serial { width:22%; font-size:12px; }
+  .dinv-head-serial div { margin-bottom:9px; }
+
+  /* Người bán / người mua */
+  .dinv-parties { border:none; }
+  /* separate -> wkhtmltopdf không kéo gạch chân ô .dinv-val lan sang ô nhãn */
+  .dinv-party-tbl { width:100%; border-collapse:separate; border-spacing:0; }
+  .dinv-party-tbl + .dinv-party-tbl { border-top:1px solid #000; }
+  .dinv-party-tbl td { border:0; padding:3px 6px; font-size:11px; vertical-align:bottom; }
+  .dinv-lbl { white-space:nowrap; width:1%; }
+  .dinv-party-tbl td.dinv-val { border-bottom:1px dotted #666; }
+  .dinv-lbl-mst { white-space:nowrap; text-align:right; width:1%; }
+  /* font-size:0 triệt khoảng trắng giữa các ô MST để chúng dính liền nhau */
+  .dinv-val-mst { white-space:nowrap; width:1%; font-size:0; }
+  .dinv-box { display:inline-block; width:14px; height:16px; line-height:16px; border:1px solid #000;
+      text-align:center; margin-left:-1px; font-size:11px; vertical-align:middle; }
+
+  /* Vùng bảng + watermark nền (không dùng transform vì wkhtmltopdf bỏ qua) */
+  .dinv-table-wrap { position:relative; }
+  .dinv-bg { position:absolute; top:0; left:1%; width:98%; z-index:-1; opacity:1; }
+
+  /* Bảng chi tiết */
+  .dinv-lines { width:100%; border-collapse:collapse; border:1.5px solid #000; background:transparent; }
+  .dinv-lines th, .dinv-lines td { border:1px solid #000; padding:4px 5px;
+      font-size:11px; line-height:1.3; vertical-align:top; }
+  .dinv-lines-head th { background:#eef2f7; font-size:10px; text-align:center;
+      vertical-align:middle; font-weight:700; }
+  .dinv-lines-colnum td { text-align:center; font-size:9px; background:#f7f7f7; }
+  .dinv-c{ text-align:center; } .dinv-l{ text-align:left; } .dinv-r{ text-align:right; }
+  .dinv-empty td { height:20px; }
+  .dinv-total-row td { font-weight:700; }
+
+  /* Số tiền bằng chữ + tổng theo mức thuế */
+  .dinv-inwords { border:1.5px solid #000; border-top:none; padding:4px 6px; font-size:11px; }
+  .dinv-taxsum { width:100%; border-collapse:collapse; border:1.5px solid #000; border-top:none; }
+  .dinv-taxsum td { border:0; padding:3px 6px; font-size:11px; }
+  .dinv-ts-lbl { width:30%; } .dinv-ts-val { width:20%; text-align:right; }
+
+  /* Chữ ký */
+  .dinv-sign { width:100%; border-collapse:collapse; border:1.5px solid #000; border-top:none; }
+  .dinv-sign td { width:50%; text-align:center; padding:8px 6px 64px; vertical-align:top; font-size:11px; }
+  .dinv-sign-title { font-weight:700; } .dinv-sign-sub { font-size:10px; }
+  .dinv-lookup { font-size:10px; margin-top:4px; }
+
+  @media print { body{background:#fff;padding:0;} .sheet{box-shadow:none;margin:0;} }
+  @page { size:A4; margin:7mm 8mm; }
+</style>
+</head>
+<body>
+<div class="sheet">
+  <div class="dinv-page">
+
+    <div class="dinv-provider">
+      Giải pháp hóa đơn điện tử được cung cấp bởi Tổng Công ty Bưu điện Việt Nam - MST: 0102595740 - Tel: 1900545481
+    </div>
+
+    <!-- KHỐI THÔNG TIN: header + người bán/mua chung MỘT khung -->
+    <div class="dinv-info">
+      <table class="dinv-head"><tr>
+        <td class="dinv-head-logo"><img class="dinv-logo" src="logo.png" alt="VIETNAM POST"/></td>
+        <td class="dinv-head-title">
+          <div class="dinv-title-vi">HÓA ĐƠN GIÁ TRỊ GIA TĂNG</div>
+          <div class="dinv-title-en">VAT INVOICE</div>
+          <div class="dinv-date">Ngày <span class="dinv-dmy">07</span> tháng <span class="dinv-dmy">10</span> năm <span class="dinv-dmy">2026</span></div>
+        </td>
+        <td class="dinv-head-serial">
+          <div>Ký hiệu <i>(Series)</i>:</div>
+          <div>Số <i>(No.)</i>:</div>
+        </td>
+      </tr></table>
+
+      <div class="dinv-parties">
+        <table class="dinv-party-tbl">
+          <tr><td class="dinv-lbl">Đơn vị bán hàng <i>(Sale company)</i>:</td><td class="dinv-val" colspan="3">CÔNG TY LOGISTICS - TỔNG CÔNG TY BƯU ĐIỆN VIỆT NAM</td></tr>
+          <tr><td class="dinv-lbl">Địa chỉ <i>(Address)</i>:</td><td class="dinv-val" colspan="3">Số 5, đường Phạm Hùng, phường Cầu Giấy, thành phố Hà Nội, Việt Nam</td></tr>
+          <tr><td class="dinv-lbl">Số tài khoản <i>(Account code)</i>:</td><td class="dinv-val" colspan="3"></td></tr>
+          <tr>
+            <td class="dinv-lbl">Điện thoại <i>(Tel)</i>:</td><td class="dinv-val" style="width:28%">0852543999</td>
+            <td class="dinv-lbl-mst">MST:</td>
+            <td class="dinv-val-mst">
+              <span class="dinv-box">0</span><span class="dinv-box">1</span><span class="dinv-box">0</span><span class="dinv-box">9</span><span class="dinv-box">8</span><span class="dinv-box">5</span><span class="dinv-box">8</span><span class="dinv-box">4</span><span class="dinv-box">2</span><span class="dinv-box">0</span><span class="dinv-box"></span><span class="dinv-box"></span><span class="dinv-box"></span><span class="dinv-box"></span>
+            </td>
+          </tr>
+        </table>
+        <table class="dinv-party-tbl">
+          <tr><td class="dinv-lbl">Họ tên người mua hàng <i>(Customer's name)</i>:</td><td class="dinv-val" colspan="3"></td></tr>
+          <tr><td class="dinv-lbl">Tên đơn vị <i>(Company)</i>:</td><td class="dinv-val" colspan="3">CÔNG TY CỔ PHẦN DC TRADING &amp; EXPORT</td></tr>
+          <tr><td class="dinv-lbl">Địa chỉ <i>(Address)</i>:</td><td class="dinv-val" colspan="3">Số 18, Đường Võ Thị Sáu, Tổ 3, Khu phố Khánh Long, Phường Tân Khánh, TP Hồ Chí Minh</td></tr>
+          <tr><td class="dinv-lbl">Số tài khoản <i>(Account code)</i>:</td><td class="dinv-val" colspan="3"></td></tr>
+          <tr>
+            <td class="dinv-lbl">Điện thoại <i>(Tel)</i>:</td><td class="dinv-val" style="width:28%"></td>
+            <td class="dinv-lbl-mst">MST:</td>
+            <td class="dinv-val-mst">
+              <span class="dinv-box">3</span><span class="dinv-box">7</span><span class="dinv-box">0</span><span class="dinv-box">3</span><span class="dinv-box">4</span><span class="dinv-box">1</span><span class="dinv-box">5</span><span class="dinv-box">2</span><span class="dinv-box">3</span><span class="dinv-box">6</span><span class="dinv-box"></span><span class="dinv-box"></span><span class="dinv-box"></span><span class="dinv-box"></span>
+            </td>
+          </tr>
+          <tr><td class="dinv-lbl">Hình thức thanh toán <i>(Method of payment)</i>:</td><td class="dinv-val" colspan="3">Chuyển khoản</td></tr>
+          <tr><td class="dinv-lbl">Số hộ chiếu <i>(Passport)</i>:</td><td class="dinv-val"></td><td class="dinv-lbl">Số CCCD <i>(Citizen ID number)</i>:</td><td class="dinv-val"></td></tr>
+          <tr><td class="dinv-lbl">Mã đơn vị quan hệ ngân sách:</td><td class="dinv-val" colspan="3"></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="dinv-table-wrap">
+      <img class="dinv-bg" src="background.png" alt=""/>
+      <table class="dinv-lines">
+        <thead>
+          <tr class="dinv-lines-head">
+            <th style="width:4%">Stt<br/><i>(ITEM)</i></th>
+            <th style="width:25%">Tên hàng hóa, dịch vụ<br/><i>(DESCRIPTION)</i></th>
+            <th style="width:7%">Đơn vị tính<br/><i>(UNIT)</i></th>
+            <th style="width:7%">Số lượng<br/><i>(QUANTITY)</i></th>
+            <th style="width:11%">Đơn giá<br/><i>(UNIT PRICE)</i></th>
+            <th style="width:8%">Chiết khấu<br/><i>(DISCOUNT)</i> VND</th>
+            <th style="width:11%">Thành tiền<br/><i>(AMOUNT)</i> VND</th>
+            <th style="width:7%">Thuế suất GTGT<br/><i>(VAT)</i></th>
+            <th style="width:10%">Tiền thuế GTGT<br/><i>(VAT AMOUNT)</i></th>
+            <th style="width:10%">Thành tiền sau thuế<br/><i>(GRAND TOTAL)</i></th>
+          </tr>
+          <tr class="dinv-lines-colnum"><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7=4x5-6</td><td>8</td><td>9=7*8</td><td>10=7+9</td></tr>
+        </thead>
+        <tbody>
+          <tr><td class="dinv-c">1</td><td class="dinv-l">Cước vận chuyển quốc tế đường biển tuyến Hồ Chí Minh, Việt Nam - Long Beach, Mỹ. Số tàu/chuyến: OOCL VIOLET/012E. Số bill: VNPLGB26101</td><td class="dinv-c">40HC</td><td class="dinv-r">1</td><td class="dinv-r">170.267.500</td><td class="dinv-r"></td><td class="dinv-r">170.267.500</td><td class="dinv-c">0%</td><td class="dinv-r">0</td><td class="dinv-r">170.267.500</td></tr>
+          <tr><td class="dinv-c">2</td><td class="dinv-l">Phí xếp dỡ hàng (THC)</td><td class="dinv-c">40HC</td><td class="dinv-r">1</td><td class="dinv-r">5.500.950</td><td class="dinv-r"></td><td class="dinv-r">5.500.950</td><td class="dinv-c">8%</td><td class="dinv-r">440.076</td><td class="dinv-r">5.941.026</td></tr>
+          <tr><td class="dinv-c">3</td><td class="dinv-l">Phí vận đơn (Bill)</td><td class="dinv-c">Bộ</td><td class="dinv-r">1</td><td class="dinv-r">1.178.775</td><td class="dinv-r"></td><td class="dinv-r">1.178.775</td><td class="dinv-c">8%</td><td class="dinv-r">94.302</td><td class="dinv-r">1.273.077</td></tr>
+          <tr><td class="dinv-c">4</td><td class="dinv-l">Phí niêm chì (Seal)</td><td class="dinv-c">40HC</td><td class="dinv-r">1</td><td class="dinv-r">261.950</td><td class="dinv-r"></td><td class="dinv-r">261.950</td><td class="dinv-c">8%</td><td class="dinv-r">20.956</td><td class="dinv-r">282.906</td></tr>
+          <tr><td class="dinv-c">5</td><td class="dinv-l">Phí điện giao hàng (Telex release)</td><td class="dinv-c">Bộ</td><td class="dinv-r">1</td><td class="dinv-r">1.178.775</td><td class="dinv-r"></td><td class="dinv-r">1.178.775</td><td class="dinv-c">8%</td><td class="dinv-r">94.302</td><td class="dinv-r">1.273.077</td></tr>
+          <tr><td class="dinv-c">6</td><td class="dinv-l">Phí xử lý hàng hóa tại cảng đi</td><td class="dinv-c">Bộ</td><td class="dinv-r">1</td><td class="dinv-r">1.047.800</td><td class="dinv-r"></td><td class="dinv-r">1.047.800</td><td class="dinv-c">8%</td><td class="dinv-r">83.824</td><td class="dinv-r">1.131.624</td></tr>
+          <tr><td class="dinv-c">7</td><td class="dinv-l">Phí khai báo AMS</td><td class="dinv-c">Bộ</td><td class="dinv-r">1</td><td class="dinv-r">916.825</td><td class="dinv-r"></td><td class="dinv-r">916.825</td><td class="dinv-c">8%</td><td class="dinv-r">73.346</td><td class="dinv-r">990.171</td></tr>
+          <tr><td class="dinv-c">8</td><td class="dinv-l">Phí xử lý hàng hóa tại cảng đến</td><td class="dinv-c">Bộ</td><td class="dinv-r">1</td><td class="dinv-r">3.143.400</td><td class="dinv-r"></td><td class="dinv-r">3.143.400</td><td class="dinv-c">8%</td><td class="dinv-r">251.472</td><td class="dinv-r">3.394.872</td></tr>
+        </tbody>
+        <tfoot>
+          <tr class="dinv-total-row">
+            <td colspan="5" class="dinv-r"><b>Cộng <i>(Total)</i>:</b></td>
+            <td></td>
+            <td class="dinv-r">183.495.975</td>
+            <td></td>
+            <td class="dinv-r">1.058.278</td>
+            <td class="dinv-r">184.554.253</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <div class="dinv-inwords">Số tiền viết bằng chữ <i>(In words)</i>: <b>Một trăm tám mươi bốn triệu năm trăm năm mươi bốn nghìn hai trăm năm mươi ba đồng</b></div>
+
+    <table class="dinv-taxsum">
+      <tr><td class="dinv-ts-lbl">Tổng tiền không chịu thuế:</td><td class="dinv-ts-val"></td><td class="dinv-ts-lbl"></td><td class="dinv-ts-val"></td></tr>
+      <tr><td class="dinv-ts-lbl">Tổng tiền không kê khai tính nộp thuế:</td><td class="dinv-ts-val"></td><td class="dinv-ts-lbl"></td><td class="dinv-ts-val"></td></tr>
+      <tr><td class="dinv-ts-lbl">Tổng tiền chịu thuế 0%:</td><td class="dinv-ts-val">170.267.500</td><td class="dinv-ts-lbl"></td><td class="dinv-ts-val"></td></tr>
+      <tr><td class="dinv-ts-lbl">Tổng tiền chịu thuế 5%:</td><td class="dinv-ts-val"></td><td class="dinv-ts-lbl">Tổng tiền thuế GTGT 5%:</td><td class="dinv-ts-val"></td></tr>
+      <tr><td class="dinv-ts-lbl">Tổng tiền chịu thuế 8%:</td><td class="dinv-ts-val">13.228.475</td><td class="dinv-ts-lbl">Tổng tiền thuế GTGT 8%:</td><td class="dinv-ts-val">1.058.278</td></tr>
+      <tr><td class="dinv-ts-lbl">Tổng tiền chịu thuế 10%:</td><td class="dinv-ts-val"></td><td class="dinv-ts-lbl">Tổng tiền thuế GTGT 10%:</td><td class="dinv-ts-val"></td></tr>
+    </table>
+
+    <table class="dinv-sign"><tr>
+      <td><div class="dinv-sign-title">Người mua hàng <i>(Buyer)</i></div><div class="dinv-sign-sub">(Ký, ghi rõ họ, tên)</div><div class="dinv-sign-sub"><i>(Signature, full name)</i></div></td>
+      <td><div class="dinv-sign-title">Người bán hàng <i>(Saler)</i></div><div class="dinv-sign-sub">(Ký, ghi rõ họ, tên)</div><div class="dinv-sign-sub"><i>(Signature, full name)</i></div></td>
+    </tr></table>
+
+    <div class="dinv-lookup">Tra cứu hóa đơn điện tử tại Website: https://tracuuhoadon.vnpost.vn - Mã tra cứu hóa đơn:</div>
+  </div>
+</div>
+</body>
+</html>

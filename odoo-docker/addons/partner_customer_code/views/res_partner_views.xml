@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- =====================================================================
+         Form khách hàng: thêm group "Phân loại khách hàng" gom
+         Loại khách hàng + Mã số thuế + Mã khách hàng.
+
+         QUAN TRỌNG: group gốc bên phải (function/vat/website/lang/category_id)
+         chỉ chứa field. KHÔNG được chèn <group> lồng vào trong đó (trộn field +
+         group con làm Odoo vỡ cột nhãn -> mất title các field cũ). Vì vậy group
+         mới được đặt NGANG HÀNG, ngay sau wrapper 2 cột (ancestor group[2] của
+         category_id) -> render thành một section full-width dưới cùng.
+
+         - Loại khách hàng: radio ngang (tick box), giống company_type của core.
+         - Mã số thuế (vat) được DỜI xuống group này bằng position="move".
+         - Mã khách hàng: readonly khi KHÔNG phải Nội bộ ('3'); Nội bộ cho nhập
+           tay. Chặn write thực sự nằm ở create/write trong model.
+         - Mã external không hiển thị (tự sinh).
+         ===================================================================== -->
+    <record id="view_partner_form_customer_code" model="ir.ui.view">
+        <field name="name">res.partner.form.customer.code</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='category_id']/ancestor::group[2]" position="after">
+                <group name="partner_customer_group" string="Phân loại khách hàng">
+                    <field name="customer_type" widget="radio"
+                           options="{'horizontal': true}"/>
+                </group>
+            </xpath>
+            <xpath expr="//group[@name='partner_customer_group']" position="inside">
+                <xpath expr="//field[@name='vat']" position="move"/>
+                <field name="customer_code" readonly="customer_type != '3'"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

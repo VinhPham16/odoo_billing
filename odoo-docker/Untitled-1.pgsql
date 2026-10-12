@@ -264,9 +264,13 @@ order by aml.id desc;
 
 
 
+select * 
+from account_move_line 
+order by id desc;
 
-
-
+select * 
+from res_partner 
+order by id desc;
 
 
 
