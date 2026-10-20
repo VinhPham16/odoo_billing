@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Form hóa đơn: Ký hiệu HĐĐT trong tab "Other Info", cạnh Salesperson.
+         Chỉ hiện với hóa đơn bán. -->
+    <record id="view_move_form_ky_hieu_hddt" model="ir.ui.view">
+        <field name="name">account.move.form.ky.hieu.hddt</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='other_info']//field[@name='invoice_user_id']" position="after">
+                <field name="ky_hieu_hddt"
+                       invisible="move_type not in ('out_invoice', 'out_refund', 'out_receipt')"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- List hóa đơn: cột ẩn mặc định, bật qua nút chọn cột - giống Salesperson. -->
+    <record id="view_invoice_tree_ky_hieu_hddt" model="ir.ui.view">
+        <field name="name">account.move.list.ky.hieu.hddt</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_invoice_tree"/>
+        <field name="arch" type="xml">
+            <field name="invoice_user_id" position="after">
+                <field name="ky_hieu_hddt" string="Ký hiệu HĐĐT" optional="hide"/>
+            </field>
+        </field>
+    </record>
+
+    <!-- Search hóa đơn: tìm + Group By theo ký hiệu HĐĐT, cạnh Group By Salesperson. -->
+    <record id="view_account_invoice_filter_ky_hieu_hddt" model="ir.ui.view">
+        <field name="name">account.move.search.ky.hieu.hddt</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_account_invoice_filter"/>
+        <field name="arch" type="xml">
+            <field name="invoice_user_id" position="after">
+                <field name="ky_hieu_hddt" string="Ký hiệu HĐĐT"/>
+            </field>
+            <filter name="salesperson" position="after">
+                <filter string="Ký hiệu HĐĐT" name="ky_hieu_hddt"
+                        domain="[]" context="{'group_by': 'ky_hieu_hddt'}"/>
+            </filter>
+        </field>
+    </record>
+
+</odoo>

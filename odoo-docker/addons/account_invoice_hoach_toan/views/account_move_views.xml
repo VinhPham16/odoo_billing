@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Danh sách hóa đơn: badge "Đã hạch toán" ở cột cuối.
+         invoice_origin là mốc đã được kiểm chứng trong account.view_invoice_tree. -->
+    <record id="view_invoice_tree_hoach_toan" model="ir.ui.view">
+        <field name="name">account.move.list.hoach.toan</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_invoice_tree"/>
+        <field name="arch" type="xml">
+            <field name="invoice_origin" position="after">
+                <!-- Cần load field boolean để decoration của badge đọc được. -->
+                <field name="hoach_toan_exported" column_invisible="1"/>
+                <field name="hoach_toan_badge" widget="badge"
+                       decoration-success="hoach_toan_exported"
+                       optional="show"/>
+            </field>
+        </field>
+    </record>
+
+    <!-- Filter soát kỳ: Đã / Chưa hạch toán. -->
+    <record id="view_account_invoice_filter_hoach_toan" model="ir.ui.view">
+        <field name="name">account.invoice.select.hoach.toan</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_account_invoice_filter"/>
+        <field name="arch" type="xml">
+            <filter name="out_refund" position="after">
+                <separator/>
+                <filter string="Chưa hạch toán" name="hoach_toan_chua"
+                        domain="[('hoach_toan_exported', '=', False)]"/>
+                <filter string="Đã hạch toán" name="hoach_toan_roi"
+                        domain="[('hoach_toan_exported', '=', True)]"/>
+            </filter>
+        </field>
+    </record>
+
+</odoo>

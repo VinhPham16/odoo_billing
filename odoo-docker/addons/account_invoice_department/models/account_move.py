@@ -10,23 +10,31 @@ class AccountMove(models.Model):
     # viên kinh doanh mới là việc HR vốn đã làm, không phải tạo thêm tài
     # khoản Odoo.
     #
-    # Field thường (không compute) nên không kéo theo dây chuyền tính toán
-    # nào lúc save. Cố ý KHÔNG đặt default: kế toán lập hóa đơn cho nhiều
-    # nhân viên khác nhau, mặc định theo người đang đăng nhập vừa sai
-    # nghiệp vụ vừa tốn thêm một câu search mỗi lần tạo.
+    # Mặc định theo KHÁCH HÀNG (không theo người đang đăng nhập): mỗi khách
+    # hàng cấu hình sẵn một nhân viên kinh doanh (res.partner.sale_employee_id),
+    # chọn khách hàng là field tự điền. Dùng stored compute + readonly=False
+    # kiểu sale.order.user_id của core: fill khi còn trống, còn lại giữ
+    # nguyên giá trị người dùng chọn tay. precompute=True là bắt buộc để
+    # department_id (phụ thuộc field này) vẫn precompute được, không sinh
+    # warning lúc khởi động.
     employee_id = fields.Many2one(
         comodel_name="hr.employee",
         string="Nhân viên kinh doanh",
+        compute="_compute_employee_id",
+        store=True,
+        readonly=False,
+        precompute=True,
         index="btree_not_null",
         tracking=True,
-        help="Nhân viên được ghi nhận doanh thu của hóa đơn này. Khác với "
-             "Salesperson - Salesperson là người phụ trách hóa đơn trong hệ "
-             "thống (thường là kế toán lập hóa đơn).",
+        help="Nhân viên được ghi nhận doanh thu của hóa đơn này. Mặc định "
+             "lấy theo Nhân viên kinh doanh cấu hình trên khách hàng, có thể "
+             "chọn lại. Khác với Salesperson - Salesperson là người phụ trách "
+             "hóa đơn trong hệ thống (thường là kế toán lập hóa đơn).",
     )
 
     department_id = fields.Many2one(
         comodel_name="hr.department",
-        string="Department",
+        string="Trung tâm kinh doanh",
         compute="_compute_department_id",
         store=True,
         readonly=False,
@@ -38,6 +46,29 @@ class AccountMove(models.Model):
              "lấy theo phòng ban của Nhân viên kinh doanh, có thể chọn lại "
              "phòng ban khác khi doanh thu thuộc về bộ phận khác.",
     )
+
+    @api.depends("partner_id")
+    def _compute_employee_id(self):
+        """Mặc định nhân viên kinh doanh theo khách hàng, vẫn cho chọn lại.
+
+        Pattern "stored compute + readonly=False" giống sale.order.user_id của
+        core: chỉ điền khi field còn trống (`not employee_id`) nên không ghi đè
+        lựa chọn tay, và đổi sang khách hàng khác không xóa giá trị đã có.
+
+        Đọc partner_id.sale_employee_id là phép đọc quan hệ, ORM prefetch theo
+        lô - không có câu search nào trên đường save. Fallback sang
+        commercial_partner_id để liên hệ con dùng chung cấu hình của công ty mẹ.
+        """
+        for move in self:
+            if move.partner_id and not move.employee_id:
+                move.employee_id = (
+                    move.partner_id.sale_employee_id
+                    or move.partner_id.commercial_partner_id.sale_employee_id
+                )
+            else:
+                # Compute bắt buộc gán cho mọi record; gán lại chính nó để giữ
+                # giá trị đang có khi không có khách hàng hoặc đã chọn tay.
+                move.employee_id = move.employee_id
 
     @api.depends("employee_id")
     def _compute_department_id(self):

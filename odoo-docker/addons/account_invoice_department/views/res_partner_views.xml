@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        Form khách hàng: cấu hình Nhân viên kinh doanh mặc định ngay cạnh
+        Salesperson (user_id) của core, trong tab "Sales & Purchase" > group
+        "Sales". Trung tâm kinh doanh hiển thị readonly theo nhân viên.
+    -->
+    <record id="view_partner_form_sale_employee" model="ir.ui.view">
+        <field name="name">res.partner.form.sale.employee</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <field name="user_id" position="after">
+                <field name="sale_employee_id"
+                       options="{'no_create': True, 'no_create_edit': True}"/>
+                <field name="sale_department_id"/>
+            </field>
+        </field>
+    </record>
+</odoo>

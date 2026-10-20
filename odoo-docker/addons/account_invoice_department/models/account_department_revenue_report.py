@@ -33,7 +33,7 @@ class AccountDepartmentRevenueReport(models.Model):
         string="Type", readonly=True,
     )
     invoice_date = fields.Date(string="Invoice Date", readonly=True)
-    department_id = fields.Many2one("hr.department", string="Department", readonly=True)
+    department_id = fields.Many2one("hr.department", string="Trung tâm kinh doanh", readonly=True)
     employee_id = fields.Many2one("hr.employee", string="Nhân viên kinh doanh", readonly=True)
     invoice_user_id = fields.Many2one("res.users", string="Salesperson", readonly=True)
     partner_id = fields.Many2one("res.partner", string="Customer", readonly=True)

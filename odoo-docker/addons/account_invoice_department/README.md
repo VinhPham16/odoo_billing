@@ -10,15 +10,24 @@ lưu phòng ban ngay trên hóa đơn: quan hệ nhân viên ↔ phòng ban thay
 thời gian (chuyển bộ phận), nên **không** suy ngược được phòng ban tại thời
 điểm xuất hóa đơn nếu chỉ lưu người bán.
 
+> Nhãn `department_id` hiển thị trên giao diện là **"Trung tâm kinh doanh"**
+> (model nền vẫn là `hr.department`). README dùng "phòng ban"/"trung tâm" thay
+> thế nhau để chỉ cùng một thứ.
+
 ## Chức năng
 
-- Thêm `employee_id` (Nhân viên kinh doanh) và `department_id` trên
-  `account.move`.
-- Chọn nhân viên → tự điền phòng ban của nhân viên đó.
-- Vẫn sửa tay được, để ghi doanh thu cho phòng ban khác.
+- Thêm `employee_id` (Nhân viên kinh doanh) và `department_id` (Trung tâm kinh
+  doanh) trên `account.move`, đặt ở **cột trái khối header** (ngay dưới
+  Customer), không còn nằm trong tab "Other Info".
+- Cấu hình **Nhân viên kinh doanh mặc định theo khách hàng**
+  (`res.partner.sale_employee_id`): chọn khách hàng trên hóa đơn → tự điền nhân
+  viên → phòng ban tự điền theo nhân viên. Vẫn sửa tay được.
+- Chọn/đổi nhân viên → tự điền phòng ban của nhân viên đó (rule không đổi).
+- `invoice_user_id` (Salesperson core) giữ nguyên trong tab "Other Info", đổi
+  nhãn "Salesperson (phụ trách hóa đơn)" để tách bạch vai trò.
 - Báo cáo **Revenue by Department** (pivot/graph/list) dưới
   Accounting → Reporting.
-- Filter + Group By theo nhân viên và phòng ban trên màn Invoices.
+- Filter + Group By theo nhân viên và trung tâm kinh doanh trên màn Invoices.
 
 ## Thiết kế
 
@@ -50,6 +59,30 @@ Ba lý do kỹ thuật đi kèm:
 |---|---|
 | `invoice_user_id` | Người phụ trách hóa đơn **trong hệ thống**, thường là kế toán lập hóa đơn |
 | `employee_id` | Người được **ghi nhận doanh thu**, nguồn suy ra phòng ban |
+
+### Mặc định nhân viên theo khách hàng
+
+`res.partner.sale_employee_id` (trỏ `hr.employee`) là nơi cấu hình trước nhân
+viên kinh doanh cho từng khách hàng. `account.move.employee_id` là **stored
+compute + `readonly=False` + `precompute=True`** theo `partner_id`, lấy pattern
+của `sale.order.user_id` core: chỉ điền khi còn trống (`not employee_id`) nên
+không ghi đè lựa chọn tay, đổi khách hàng khác cũng không xóa giá trị đã có.
+
+Đọc `partner_id.sale_employee_id` là phép đọc quan hệ (ORM prefetch), **không có
+câu `search` nào trên đường save** - giữ đúng triết lý chi phí của module. Vì
+`partner_id` của `account.move` bản thân là stored compute `precompute=True`,
+`employee_id` phụ thuộc nó vẫn precompute được, và `department_id` (phụ thuộc
+`employee_id`) cũng vậy - không sinh warning `cannot be precomputed`.
+
+`res.partner.sale_department_id` chỉ là field `related` readonly (không store):
+hiển thị trung tâm sẽ áp dụng, không phải điểm cấu hình riêng. Trên hóa đơn,
+trung tâm **luôn** suy từ nhân viên - không có "đặt trung tâm khác nhân viên ở
+khách hàng".
+
+Lưu ý ảnh chụp: `department_id` chỉ `@api.depends("employee_id")` (con trỏ nhân
+viên), không depends `employee_id.department_id`. Nhân viên chuyển phòng ban
+trong HR **không** tính lại trung tâm trên hóa đơn cũ - đúng chủ đích ghi nhận
+theo trạng thái tại thời điểm xuất; hóa đơn tạo mới sau đó mới lấy phòng ban mới.
 
 ### Field phòng ban
 
@@ -129,6 +162,7 @@ docker restart odoo_app
 | Bảng | Thay đổi |
 |---|---|
 | `account_move` | `+ employee_id`, `+ department_id` (FK + partial index) |
+| `res_partner` | `+ sale_employee_id` (FK + partial index). `sale_department_id` là related readonly, **không** thêm cột |
 | `account_move_line` | **Không đụng gì** |
 
 `account_department_revenue_report` là VIEW, không phải table. Không backfill:

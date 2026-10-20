@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- =====================================================================
+         Form sổ nhật ký: ô cấu hình mẫu ký hiệu HĐĐT.
+
+         Mốc xpath page[@name='bank_account'] là page đầu tiên của notebook,
+         tồn tại với MỌI loại sổ (đã dùng ở account_invoice_disbursement).
+         Group tự ẩn khi type != 'sale' vì ký hiệu HĐĐT chỉ áp cho sổ bán.
+         ===================================================================== -->
+    <record id="view_account_journal_form_ky_hieu_hddt" model="ir.ui.view">
+        <field name="name">account.journal.form.ky.hieu.hddt</field>
+        <field name="model">account.journal</field>
+        <field name="inherit_id" ref="account.view_account_journal_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='bank_account']" position="inside">
+                <group string="Hóa đơn điện tử" name="einvoice_symbol_group"
+                       invisible="type != 'sale'">
+                    <field name="ky_hieu_hddt" placeholder="1K{yy}TAA"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

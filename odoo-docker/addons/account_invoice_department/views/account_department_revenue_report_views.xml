@@ -62,7 +62,7 @@
                 <separator/>
                 <filter string="Invoice Date" name="filter_invoice_date" date="invoice_date"/>
                 <group>
-                    <filter string="Department" name="group_by_department"
+                    <filter string="Trung tâm kinh doanh" name="group_by_department"
                             domain="[]" context="{'group_by': 'department_id'}"/>
                     <filter string="Nhân viên kinh doanh" name="group_by_employee"
                             domain="[]" context="{'group_by': 'employee_id'}"/>

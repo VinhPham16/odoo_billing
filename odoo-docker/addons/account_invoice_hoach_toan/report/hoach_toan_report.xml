@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Report xlsx: chỉ gọi từ wizard (report_action(moves)), không bind Print. -->
+    <record id="action_hoach_toan_xlsx" model="ir.actions.report">
+        <field name="name">Xuất hạch toán (Excel)</field>
+        <field name="model">account.move</field>
+        <field name="report_type">xlsx</field>
+        <field name="report_name">account_invoice_hoach_toan.hoach_toan_xlsx</field>
+        <field name="report_file">hoach_toan</field>
+    </record>
+
+</odoo>

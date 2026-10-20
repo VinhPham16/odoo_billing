@@ -8,20 +8,32 @@
              phát hành) vì tiêu đề/nội dung tham chiếu hóa đơn chính thức, sai với
              bản nháp. Sửa Subject / Body trực tiếp trên UI sau khi cài. -->
         <record id="mail_template_send_draft_invoice" model="mail.template">
-            <field name="name">Hóa đơn nháp (Proforma) - Gửi khách</field>
+            <field name="name">Hóa đơn nháp (Proforma) - Gửi nhân viên kinh doanh</field>
             <field name="model_id" ref="account.model_account_move"/>
-            <field name="subject">Hóa đơn nháp (Proforma) - {{ object.partner_id.name or '' }}</field>
+            <field name="subject">Hóa đơn nháp (Proforma) - KH {{ object.partner_id.name or '' }}</field>
             <field name="email_from">{{ (object.company_id.email_formatted or user.email_formatted or '') }}</field>
-            <field name="partner_to">{{ object.partner_id.id }}</field>
-            <field name="lang">{{ object.partner_id.lang }}</field>
+            <!-- BẮT BUỘC đặt False. Core Odoo mặc định use_default_to=True, khi đó
+                 nó BỎ QUA partner_to và gửi tới "default recipient" của bản ghi -
+                 với account.move đó là KHÁCH HÀNG (partner_id). Tắt cờ này thì
+                 partner_to bên dưới mới có hiệu lực. -->
+            <field name="use_default_to" eval="False"/>
+            <!-- Người nhận là NHÂN VIÊN KINH DOANH của hóa đơn (account.move.employee_id,
+                 module account_invoice_department), KHÔNG phải khách hàng. Core Odoo lưu
+                 email nhân viên trên res.partner phụ 'work_contact_id' (đồng bộ với
+                 work_email) nên trỏ partner_to vào đó là gửi đúng email nhân viên mà
+                 không tạo partner/tài khoản mới. Nhân viên chưa có work_email -> render
+                 rỗng -> composer mở với ô 'To' trống để kế toán tự điền (không fallback
+                 sang khách hàng, không báo lỗi). -->
+            <field name="partner_to">{{ object.employee_id.work_contact_id.id if object.employee_id.work_email else '' }}</field>
+            <field name="lang">{{ user.lang }}</field>
             <field name="auto_delete" eval="True"/>
             <field name="body_html" type="html">
                 <div style="margin:0px;padding:0px;font-size:13px;">
-                    <p>Kính gửi <t t-out="object.partner_id.name or ''">Quý khách</t>,</p>
+                    <p>Kính gửi <t t-out="object.employee_id.name or ''">Anh/Chị</t>,</p>
                     <p>
-                        Công ty <t t-out="object.company_id.name or ''">chúng tôi</t> xin gửi Quý khách
-                        <strong>hóa đơn nháp (proforma)</strong> trong tệp đính kèm để rà soát trước khi
-                        phát hành hóa đơn điện tử chính thức.
+                        Phòng Kế toán gửi Anh/Chị <strong>hóa đơn nháp (proforma)</strong> của khách hàng
+                        <strong><t t-out="object.partner_id.name or ''">Quý khách</t></strong>
+                        trong tệp đính kèm để rà soát trước khi phát hành hóa đơn điện tử chính thức.
                     </p>
                     <p>
                         Vui lòng kiểm tra thông tin và phản hồi nếu cần điều chỉnh. Đây là

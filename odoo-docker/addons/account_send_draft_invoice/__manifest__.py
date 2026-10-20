@@ -3,7 +3,7 @@
     'summary': 'Cho phép gửi (email) hóa đơn bán khi còn ở trạng thái Draft dưới dạng proforma',
     'version': '19.0.1.0.0',
     'category': 'Accounting/Accounting',
-    'depends': ['account', 'mail'],
+    'depends': ['account', 'mail', 'account_invoice_einvoice_symbol'],
     'data': [
         'data/mail_template_send_draft_invoice.xml',
         'report/report_draft_invoice.xml',

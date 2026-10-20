@@ -90,7 +90,7 @@
                     </div>
                 </td>
                 <td class="dinv-head-serial">
-                    <div>Ký hiệu <i>(Series)</i>:</div>
+                    <div>Ký hiệu <i>(Series)</i>: <span t-esc="o.ky_hieu_hddt or ''"/></div>
                     <div>Số <i>(No.)</i>:</div>
                 </td>
             </tr></table>

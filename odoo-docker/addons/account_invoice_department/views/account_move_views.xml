@@ -1,15 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <!--
-        Form hóa đơn: Nhân viên kinh doanh + Department nằm ngay dưới
-        Salesperson trong tab "Other Info" > group "Invoice".
+        Form hóa đơn: Nhân viên kinh doanh + Trung tâm kinh doanh nằm ở cột
+        trái khối header, ngay dưới Customer - để nổi bật khi lập hóa đơn,
+        không phải mở tab "Other Info" mới thấy.
 
         Đặt nhãn tách bạch hai vai trò:
         - Salesperson (invoice_user_id, của core): người phụ trách hóa đơn
           TRONG HỆ THỐNG, thường là kế toán lập hóa đơn. Core còn dùng field
-          này cho filter "My Invoices" và mail template nên không bỏ được.
+          này cho filter "My Invoices" và mail template nên không bỏ được -
+          giữ nguyên trong tab "Other Info".
         - Nhân viên kinh doanh (employee_id): người được GHI NHẬN DOANH THU,
-          là nguồn suy ra phòng ban.
+          là nguồn suy ra trung tâm kinh doanh.
     -->
     <record id="view_move_form_department" model="ir.ui.view">
         <field name="name">account.move.form.department</field>
@@ -19,7 +21,7 @@
             <xpath expr="//page[@name='other_info']//field[@name='invoice_user_id']" position="attributes">
                 <attribute name="string">Salesperson (phụ trách hóa đơn)</attribute>
             </xpath>
-            <xpath expr="//page[@name='other_info']//field[@name='invoice_user_id']" position="after">
+            <xpath expr="//group[@id='header_left_group']" position="inside">
                 <field name="employee_id"
                        options="{'no_create': True, 'no_create_edit': True}"/>
                 <!--
@@ -58,12 +60,12 @@
         <field name="arch" type="xml">
             <field name="invoice_user_id" position="after">
                 <field name="employee_id" string="Nhân viên kinh doanh"/>
-                <field name="department_id" string="Department"/>
+                <field name="department_id" string="Trung tâm kinh doanh"/>
             </field>
             <filter name="salesperson" position="after">
                 <filter string="Nhân viên kinh doanh" name="employee"
                         domain="[]" context="{'group_by': 'employee_id'}"/>
-                <filter string="Department" name="department"
+                <filter string="Trung tâm kinh doanh" name="department"
                         domain="[]" context="{'group_by': 'department_id'}"/>
             </filter>
         </field>

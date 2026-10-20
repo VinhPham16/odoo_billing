@@ -266,14 +266,23 @@ order by aml.id desc;
 
 select * 
 from account_move_line 
-order by id desc;
+order by id desc
+limit 10;
 
 select * 
-from res_partner 
+from product_product 
 order by id desc;
 
+select ref,*
+from account_move
+order by id desc
+limit 200;
 
 
+
+select * from account_move
+order by id desc
+limit 50;
 
 
 

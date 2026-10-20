@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_hoach_toan_export_wizard_form" model="ir.ui.view">
+        <field name="name">hoach.toan.export.wizard.form</field>
+        <field name="model">hoach.toan.export.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Xuất báo cáo hạch toán">
+                <group>
+                    <group>
+                        <field name="date_from"/>
+                        <field name="date_to"/>
+                    </group>
+                    <group>
+                        <field name="company_id"
+                               groups="base.group_multi_company"
+                               options="{'no_create': True}"/>
+                        <field name="journal_ids" widget="many2many_tags"
+                               options="{'no_create': True}"/>
+                        <field name="exclude_exported"/>
+                    </group>
+                </group>
+                <div class="alert alert-info" role="alert">
+                    Xuất các hóa đơn bán và giấy báo có (credit note) đã vào sổ,
+                    lọc theo <b>Ngày hóa đơn</b>. Mỗi hóa đơn được đánh cờ
+                    <b>Đã hạch toán</b> và ghi 1 dòng vào nhật ký. Để xuất lại
+                    một hóa đơn lẻ: đặt Từ ngày = Đến ngày = ngày hóa đơn đó và
+                    bỏ tick “Bỏ qua hóa đơn đã hạch toán”.
+                </div>
+                <footer>
+                    <button name="action_export" type="object"
+                            string="Xuất Excel" class="btn-primary"
+                            data-hotkey="q"/>
+                    <button string="Hủy" special="cancel"
+                            class="btn-secondary" data-hotkey="x"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_hoach_toan_export_wizard" model="ir.actions.act_window">
+        <field name="name">Xuất hạch toán</field>
+        <field name="res_model">hoach.toan.export.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <menuitem id="menu_hoach_toan_export"
+              name="Xuất hạch toán"
+              parent="account.menu_finance_reports"
+              action="action_hoach_toan_export_wizard"
+              sequence="60"/>
+
+</odoo>
