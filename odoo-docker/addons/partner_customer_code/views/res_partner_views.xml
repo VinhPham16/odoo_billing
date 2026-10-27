@@ -13,8 +13,11 @@
 
          - Loại khách hàng: radio ngang (tick box), giống company_type của core.
          - Mã số thuế (vat) được DỜI xuống group này bằng position="move".
-         - Mã khách hàng: readonly khi KHÔNG phải Nội bộ ('3'); Nội bộ cho nhập
-           tay. Chặn write thực sự nằm ở create/write trong model.
+         - Mã khách hàng: readonly khi Trong nước ('1', tự sinh = MST); Nước
+           ngoài ('2') và Nội bộ ('3') cho nhập tay. Nước ngoài được onchange
+           tự điền sẵn prefix 'NN' (user gõ tiếp 10 chữ số). Chặn write thực sự
+           nằm ở create/write trong model; định dạng nước ngoài 'NN'+10 chữ số
+           được ràng buộc bởi _check_foreign_customer_code.
          - Mã external không hiển thị (tự sinh).
          ===================================================================== -->
     <record id="view_partner_form_customer_code" model="ir.ui.view">
@@ -30,7 +33,7 @@
             </xpath>
             <xpath expr="//group[@name='partner_customer_group']" position="inside">
                 <xpath expr="//field[@name='vat']" position="move"/>
-                <field name="customer_code" readonly="customer_type != '3'"/>
+                <field name="customer_code" readonly="customer_type == '1'"/>
             </xpath>
         </field>
     </record>

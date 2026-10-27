@@ -285,4 +285,84 @@ order by id desc
 limit 50;
 
 
+vnp_admin@dmst-vnpl-odoo-prod-cicd:~$ df -h
+Filesystem                         Size  Used Avail Use% Mounted on
+tmpfs                              1.6G  752K  1.6G   1% /run
+efivarfs                           256K   21K  231K   9% /sys/firmware/efi/efivars
+/dev/mapper/ubuntu--vg-ubuntu--lv   76G  6.8G   66G  10% /
+tmpfs                              7.9G     0  7.9G   0% /dev/shm
+tmpfs                              5.0M     0  5.0M   0% /run/lock
+tmpfs                              3.2G     0  3.2G   0% /tmp
+/dev/vda2                          2.0G  200M  1.6G  11% /boot
+/dev/vda1                          1.1G  6.2M  1.1G   1% /boot/efi
+tmpfs                              1.6G   12K  1.6G   1% /run/user/1002
+vnp_admin@dmst-vnpl-odoo-prod-cicd:~$ lsblk
+NAME                      MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
+vda                       253:0    0   80G  0 disk 
+├─vda1                    253:1    0    1G  0 part /boot/efi
+├─vda2                    253:2    0    2G  0 part /boot
+└─vda3                    253:3    0 76.9G  0 part 
+  └─ubuntu--vg-ubuntu--lv 252:0    0 76.9G  0 lvm  /
+vdb                       253:16   0  250G  0 disk 
+vnp_admin@dmst-vnpl-odoo-prod-cicd:~$
 
+
+
+
+services:
+  gitlab:
+    image: vcr.vnpost.vn/logistics-vnpl-esd/gitlab/gitlab-ce:19.4.3-ce.0
+    container_name: gitlab
+    hostname: git.vietnampostlogistics.com
+    restart: always
+    shm_size: '512m'
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'http://git.vietnampostlogistics.com'
+        nginx['listen_port'] = 80
+        nginx['listen_https'] = false
+        registry['enable'] = false
+        gitlab_rails['gitlab_shell_ssh_port'] = 2222
+        prometheus_monitoring['enable'] = false
+        puma['worker_processes'] = 2
+    ports:
+      - "172.24.52.11:80:80"
+      - "172.24.52.11:2222:22"
+    volumes:
+      - /data/gitlab/config:/etc/gitlab
+      - /data/gitlab/logs:/var/log/gitlab
+      - /data/gitlab/data:/var/opt/gitlab
+
+  gitlab-runner:
+    image: vcr.vnpost.vn/logistics-vnpl-esd/gitlab-runner:v19.4.0
+    container_name: gitlab-runner
+    restart: always
+    volumes:
+      - /data/gitlab/runner-config:/etc/gitlab-runner
+      - /var/run/docker.sock:/var/run/docker.sock
+
+
+
+
+vnp_admin@dmst-vnpl-odoo-prod-cicd:~$ ss -tlnp | grep ':80'
+LISTEN 0      4096    172.24.52.11:80         0.0.0.0:*          
+vnp_admin@dmst-vnpl-odoo-prod-cicd:~$ curl -s -o /dev/null -w 'GitLab local: HTTP %{http_code}\n' http://172.24.52.11
+GitLab local: HTTP 302
+vnp_admin@dmst-vnpl-odoo-prod-cicd:~$ docker ps | grep gitlab
+78c8486a3809   vcr.vnpost.vn/logistics-vnpl-esd/gitlab/gitlab-ce:19.4.3-ce.0   "/assets/init-contai…"   7 hours ago   Up 7 hours (healthy)   172.24.52.11:80->80/tcp, 443/tcp, 172.24.52.11:22
+22->22/tcp   gitlab
+7229df52c3f9   vcr.vnpost.vn/logistics-vnpl-esd/gitlab-runner:v19.4.0          "/usr/bin/dumb-init …"   7 hours ago   Up 7 hours                                                              
+             gitlab-runner
+
+
+
+
+
+SELECT * 
+FROM account_move
+LIMIT 1000;
+
+select customer_code, vat
+from res_partner 
+order by id desc
+limit 10;
