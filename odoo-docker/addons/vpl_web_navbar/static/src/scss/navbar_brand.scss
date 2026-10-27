@@ -1,0 +1,61 @@
+// ============================================================================
+//  VNPL - Thương hiệu thanh điều hướng (navbar) Odoo backend
+//
+//  Chỉ tác động vào .o_main_navbar (render 1 lần, dùng chung mọi app backend).
+//  KHÔNG đụng thân view, report PDF, website/portal.
+//
+//  Cơ chế: core Odoo không ĐỊNH NGHĨA các biến --NavBar-* mà chỉ dùng chúng
+//  làm fallback: color: var(--NavBar-entry-color, <mặc định trắng>). Vì biến
+//  CSS kế thừa xuống con, chỉ cần ĐỊNH NGHĨA biến trên .o_main_navbar là toàn
+//  bộ menu/systray đổi theo, không cần ghi đè từng selector con.
+//  (Tham chiếu: web/.../webclient/navbar/navbar.scss + navbar.variables.scss)
+// ============================================================================
+
+.o_main_navbar {
+    // --- Màu chữ / icon: trắng (mặc định) -> navy thương hiệu ---
+    --NavBar-entry-color: #013760;
+    --NavBar-entry-color--hover: #000000;
+    --NavBar-entry-color--active: #013760;
+    --NavBar-brand-color: #013760;
+
+    // --- Nền các mục menu: mặc định core tô màu tím ($o-navbar-background).
+    //     Đặt trong suốt để lộ gradient của navbar phía dưới. ---
+    --NavBar-entry-backgroundColor: transparent;
+    --NavBar-entry-backgroundColor--hover: rgba(1, 55, 96, .10);
+    --NavBar-entry-backgroundColor--focus: rgba(1, 55, 96, .10);
+    --NavBar-entry-backgroundColor--active: rgba(1, 55, 96, .16);
+
+    // --- Nền: góc trái TRẮNG -> gradient VÀNG thương hiệu (#FCAE18) bên phải.
+    //     !important để chắc chắn thắng rule nền tím của core. ---
+    background: linear-gradient(90deg,
+        #ffffff 0%,
+        #ffffff 14%,
+        #ffdc83 47%,
+        #fcae18 100%) !important;
+    border-bottom: 1px solid #e79a00 !important;
+
+    // --- Logo VPL: pseudo-element trang trí (không bấm được, theo yêu cầu).
+    //     .o_main_navbar là flex container nên ::before trở thành flex-item
+    //     đầu tiên -> nằm ở góc trái, trong vùng trắng của gradient. ---
+    &::before {
+        content: "";
+        flex: 0 0 auto;
+        align-self: center;
+        width: 106px;
+        height: 26px;
+        margin: 0 10px 0 14px;
+        background: url("/vpl_web_navbar/static/src/img/vpl_logo.png") left center / contain no-repeat;
+    }
+
+    // Systray (thảo luận, hoạt động, công ty, tài khoản) kế thừa màu navy.
+    .o_menu_systray {
+        color: #013760;
+    }
+}
+
+// Màn hình nhỏ: Odoo thu navbar về nút burger -> ẩn logo cho gọn.
+@media (max-width: 767.98px) {
+    .o_main_navbar::before {
+        display: none;
+    }
+}
