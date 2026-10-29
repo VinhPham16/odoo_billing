@@ -34,6 +34,10 @@
             <xpath expr="//group[@name='partner_customer_group']" position="inside">
                 <xpath expr="//field[@name='vat']" position="move"/>
                 <field name="customer_code" readonly="customer_type == '1'"/>
+                <!-- Định danh người mua cá nhân: chỉ hiện với Cá nhân
+                     (is_company = False); Công ty dùng MST nên ẩn. -->
+                <field name="cccd_no" invisible="is_company"/>
+                <field name="passport_no" invisible="is_company"/>
             </xpath>
         </field>
     </record>

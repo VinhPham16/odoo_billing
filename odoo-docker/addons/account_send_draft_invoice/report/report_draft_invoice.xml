@@ -133,8 +133,10 @@
                     </tr>
                     <tr><td class="dinv-lbl">Hình thức thanh toán <i>(Method of payment)</i>:</td>
                         <td class="dinv-val" colspan="3">Chuyển khoản</td></tr>
-                    <tr><td class="dinv-lbl">Số hộ chiếu <i>(Passport)</i>:</td><td class="dinv-val"></td>
-                        <td class="dinv-lbl">Số CCCD <i>(Citizen ID number)</i>:</td><td class="dinv-val"></td></tr>
+                    <tr><td class="dinv-lbl">Số hộ chiếu <i>(Passport)</i>:</td>
+                        <td class="dinv-val"><span t-esc="o.partner_id.passport_no or ''"/></td>
+                        <td class="dinv-lbl">Số CCCD <i>(Citizen ID number)</i>:</td>
+                        <td class="dinv-val"><span t-esc="o.partner_id.cccd_no or ''"/></td></tr>
                     <tr><td class="dinv-lbl">Mã đơn vị quan hệ ngân sách:</td>
                         <td class="dinv-val" colspan="3"></td></tr>
                 </table>

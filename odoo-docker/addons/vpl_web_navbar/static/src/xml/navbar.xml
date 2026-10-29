@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+
+    <!--
+      VNPL - Chèn tiêu đề hệ thống vào navbar backend (bố cục 2 hàng).
+
+      Chỉ THÊM đúng 1 node .vpl_nav_title vào bên trong <nav class="o_main_navbar">.
+      KHÔNG đổi/xoá/di chuyển node gốc nào của Odoo -> ít rủi ro khi nâng cấp.
+      Việc dồn các phần tử về 2 hàng do SCSS lo (flex-wrap + order).
+    -->
+    <t t-name="vpl_web_navbar.NavBarTitle"
+       t-inherit="web.NavBar"
+       t-inherit-mode="extension">
+        <xpath expr="//nav[hasclass('o_main_navbar')]" position="inside">
+            <div class="vpl_nav_title" aria-hidden="true">
+                <span class="vpl_nav_title_l1">Hệ thống theo dõi Doanh thu - công nợ</span>
+                <span class="vpl_nav_title_l2">Tài chính kế hoạch - Vietnam Post Logistics</span>
+            </div>
+        </xpath>
+    </t>
+
+</templates>

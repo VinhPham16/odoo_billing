@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Cổng gác các ràng buộc định dạng (MST + mã KH nước ngoài).
+         Mặc định BẬT (True). Khi migrate dữ liệu khách hàng cũ qua công cụ
+         Import: đổi value = False trên UI (Settings > Technical > System
+         Parameters) để nhập MST rác/12 số/nước ngoài, xong đổi lại True.
+         noupdate="1": nâng cấp module KHÔNG reset giá trị đã chỉnh. -->
+    <data noupdate="1">
+        <record id="param_governance_enforce" model="ir.config_parameter">
+            <field name="key">partner_customer_code.governance_enforce</field>
+            <field name="value">True</field>
+        </record>
+    </data>
+</odoo>

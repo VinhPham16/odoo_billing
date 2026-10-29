@@ -6,6 +6,7 @@
     # base: chứa res.partner, field vat và form base.view_partner_form cần mở rộng.
     'depends': ['base'],
     'data': [
+        'data/ir_config_parameter.xml',
         'views/res_partner_views.xml',
     ],
     'installable': True,

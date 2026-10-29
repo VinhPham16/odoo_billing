@@ -1,61 +1,156 @@
 // ============================================================================
-//  VNPL - Thương hiệu thanh điều hướng (navbar) Odoo backend
+//  VNPL - Thương hiệu thanh điều hướng (navbar) Odoo backend — BỐ CỤC 2 HÀNG
 //
-//  Chỉ tác động vào .o_main_navbar (render 1 lần, dùng chung mọi app backend).
-//  KHÔNG đụng thân view, report PDF, website/portal.
+//  Hàng trên (banner, nền gradient vàng): logo trái + tiêu đề hệ thống
+//      (căn trái) + systray (chat / hoạt động / công ty / tài khoản) sát phải.
+//  Hàng dưới (menu, nền trắng): nút Apps + tên App + các mục menu.
 //
-//  Cơ chế: core Odoo không ĐỊNH NGHĨA các biến --NavBar-* mà chỉ dùng chúng
-//  làm fallback: color: var(--NavBar-entry-color, <mặc định trắng>). Vì biến
-//  CSS kế thừa xuống con, chỉ cần ĐỊNH NGHĨA biến trên .o_main_navbar là toàn
-//  bộ menu/systray đổi theo, không cần ghi đè từng selector con.
-//  (Tham chiếu: web/.../webclient/navbar/navbar.scss + navbar.variables.scss)
+//  CƠ CHẾ (quan trọng):
+//   - KHÔNG di chuyển/xoá DOM gốc của Odoo. Giữ nguyên 1 thẻ
+//     <nav class="o_main_navbar">; chỉ CHÈN thêm 1 node .vpl_nav_title
+//     (xem static/src/xml/navbar.xml).
+//   - Dồn về 2 hàng bằng flex-wrap + order: mọi phần tử con MẶC ĐỊNH xuống
+//     HÀNG DƯỚI (order 2); logo (::before), tiêu đề (order -1) và systray
+//     (order 0) được kéo lên HÀNG TRÊN; một pseudo ::after rộng 100% (order 1)
+//     làm "dấu ngắt dòng" đẩy phần còn lại xuống hàng dưới.
+//   - Nền 2 tông vẽ bằng nhiều lớp background trên CÙNG một thẻ (không thêm
+//     DOM): gradient cho hàng trên + trắng cho hàng dưới + 1 vạch ngăn.
+//     background-color để TRONG SUỐT để các .bg-inherit (systray) và menu-entry
+//     (background-color: inherit) lộ đúng nền phía sau.
+//
+//  Gỡ module -> về nguyên trạng (module thuần asset: SCSS + 1 template kế thừa).
+//  (Tham chiếu: web/.../navbar/navbar.xml + navbar.scss + navbar.variables.scss)
 // ============================================================================
 
 .o_main_navbar {
-    // --- Màu chữ / icon: trắng (mặc định) -> navy thương hiệu ---
+    // --- Màu chữ / icon: trắng (mặc định core) -> navy thương hiệu ---
     --NavBar-entry-color: #013760;
     --NavBar-entry-color--hover: #000000;
     --NavBar-entry-color--active: #013760;
     --NavBar-brand-color: #013760;
 
-    // --- Nền các mục menu: mặc định core tô màu tím ($o-navbar-background).
-    //     Đặt trong suốt để lộ gradient của navbar phía dưới. ---
+    // --- Nền các mục menu trong suốt để lộ nền hàng tương ứng ---
     --NavBar-entry-backgroundColor: transparent;
     --NavBar-entry-backgroundColor--hover: rgba(1, 55, 96, .10);
     --NavBar-entry-backgroundColor--focus: rgba(1, 55, 96, .10);
     --NavBar-entry-backgroundColor--active: rgba(1, 55, 96, .16);
 
-    // --- Nền: góc trái TRẮNG -> gradient VÀNG thương hiệu (#FCAE18) bên phải.
-    //     !important để chắc chắn thắng rule nền tím của core. ---
-    background: linear-gradient(90deg,
-        #ffffff 0%,
-        #ffffff 14%,
-        #ffdc83 47%,
-        #fcae18 100%) !important;
-    border-bottom: 1px solid #e79a00 !important;
+    // --- Bố cục 2 hàng: cho phép xuống dòng, cao gấp đôi 1 hàng gốc ---
+    flex-wrap: wrap !important;
+    align-items: center;
+    height: auto !important;
+    min-height: calc(var(--o-navbar-height) * 2);
 
-    // --- Logo VPL: pseudo-element trang trí (không bấm được, theo yêu cầu).
-    //     .o_main_navbar là flex container nên ::before trở thành flex-item
-    //     đầu tiên -> nằm ở góc trái, trong vùng trắng của gradient. ---
+    // --- Nền 2 tông (xếp lớp; lớp khai trước nằm TRÊN cùng) ---
+    //   1) vạch ngăn 1px giữa 2 hàng (đặt tại y = chiều cao 1 hàng)
+    //   2) gradient VÀNG cho HÀNG TRÊN (cao đúng 1 hàng)
+    //   3) nền TRẮNG cho HÀNG DƯỚI (từ y = 1 hàng xuống hết)
+    //   KHÔNG đặt màu nền -> background-color giữ trong suốt cho .bg-inherit.
+    background:
+        linear-gradient(#e79a00, #e79a00) 0 var(--o-navbar-height) / 100% 1px no-repeat,
+        linear-gradient(90deg, #ffffff 0%, #ffffff 14%, #ffdc83 47%, #fcae18 100%)
+            0 0 / 100% var(--o-navbar-height) no-repeat,
+        linear-gradient(#ffffff, #ffffff)
+            0 100% / 100% calc(100% - var(--o-navbar-height)) no-repeat
+        !important;
+    border-bottom: 1px solid #e0e0e0 !important;
+
+    // --- Mặc định: MỌI phần tử con -> HÀNG DƯỚI (menu) ---
+    > * {
+        order: 2;
+        align-self: center;
+    }
+
+    // --- Logo (pseudo) -> HÀNG TRÊN, góc trái (vùng trắng của gradient) ---
     &::before {
         content: "";
+        order: -2;
         flex: 0 0 auto;
         align-self: center;
         width: 106px;
         height: 26px;
-        margin: 0 10px 0 14px;
+        margin: 0 8px 0 14px;
         background: url("/vpl_web_navbar/static/src/img/vpl_logo.png") left center / contain no-repeat;
     }
 
-    // Systray (thảo luận, hoạt động, công ty, tài khoản) kế thừa màu navy.
-    .o_menu_systray {
+    // --- Tiêu đề hệ thống (chèn từ navbar.xml) -> HÀNG TRÊN, căn TRÁI ---
+    .vpl_nav_title {
+        order: -1 !important;
+        flex: 0 1 auto;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: flex-start;
+        height: var(--o-navbar-height);
+        padding: 0 14px;
+        margin-left: 2px;
+        border-left: 1px solid rgba(1, 55, 96, .35);
         color: #013760;
+        line-height: 1.12;
+        white-space: nowrap;
+        overflow: hidden;
+
+        .vpl_nav_title_l1,
+        .vpl_nav_title_l2 {
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .vpl_nav_title_l1 { font-size: 14px; font-weight: 700; }
+        .vpl_nav_title_l2 { font-size: 12px; font-weight: 500; opacity: .92; }
+    }
+
+    // --- Systray -> HÀNG TRÊN, đẩy sát phải (core đã có sẵn .ms-auto) ---
+    .o_menu_systray {
+        order: 0 !important;
+        align-self: center;
+        height: var(--o-navbar-height);
+        color: #013760;
+    }
+
+    // --- Dấu ngắt dòng: đẩy mọi phần tử order >= 2 xuống HÀNG DƯỚI ---
+    &::after {
+        content: "";
+        order: 1;
+        flex: 0 0 100%;
+        width: 100%;
+        height: 0;
+        margin: 0;
+        padding: 0;
     }
 }
 
-// Màn hình nhỏ: Odoo thu navbar về nút burger -> ẩn logo cho gọn.
+// Header bọc navbar: để tự giãn theo chiều cao 2 hàng.
+.o_navbar { height: auto; }
+
+// ============================================================================
+//  Màn hình nhỏ (< 768px): Odoo thu menu về nút burger (.o_menu_toggle), ẩn
+//  brand & sections. Quay về 1 HÀNG cho gọn: [burger] [tiêu đề] … [systray].
+// ============================================================================
 @media (max-width: 767.98px) {
-    .o_main_navbar::before {
-        display: none;
+    .o_main_navbar {
+        flex-wrap: nowrap !important;
+        height: var(--o-navbar-height) !important;
+        min-height: var(--o-navbar-height);
+        // 1 hàng -> chỉ còn gradient vàng, bỏ nền trắng & vạch ngăn.
+        background: linear-gradient(90deg,
+            #ffffff 0%, #ffffff 14%, #ffdc83 47%, #fcae18 100%) !important;
+
+        &::before { display: none; }   // ẩn logo như bản gốc
+        &::after  { display: none; }   // bỏ dấu ngắt dòng
+
+        .o_menu_toggle { order: -2 !important; }   // burger ngoài cùng trái
+        .vpl_nav_title {
+            order: -1 !important;
+            height: var(--o-navbar-height);
+            border-left: 0;
+            margin-left: 2px;
+            padding: 0 8px;
+
+            .vpl_nav_title_l1 { font-size: 12.5px; }
+            .vpl_nav_title_l2 { font-size: 11px; }
+        }
+        .o_menu_systray { order: 0 !important; }   // sát phải (ms-auto)
     }
 }

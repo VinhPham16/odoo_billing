@@ -86,6 +86,20 @@ class AccountMove(models.Model):
             "context": compose_ctx,
         }
 
+    def action_print_draft_invoice(self):
+        """Tải PDF nháp (proforma) bằng template VNPost mà KHÔNG gửi email,
+        KHÔNG tạo attachment, KHÔNG đổi state. Chỉ áp dụng cho hóa đơn bán.
+
+        Dùng lại chính report `action_report_draft_invoice` (giống nút Send
+        Draft), nhưng trả về action download/preview thay vì mở mail composer.
+        """
+        self.ensure_one()
+        if self.move_type not in ("out_invoice", "out_refund", "out_receipt"):
+            raise UserError(_("Chức năng này chỉ áp dụng cho hóa đơn bán."))
+        return self.env.ref(
+            "account_send_draft_invoice.action_report_draft_invoice"
+        ).report_action(self)
+
     # ------------------------------------------------------------------
     # Helpers cho template hóa đơn draft (report_draft_invoice)
     # ------------------------------------------------------------------

@@ -22,6 +22,13 @@ _VAT_RE = re.compile(r'^\d{10}(-\d{3})?$', re.ASCII)
 # Mã khách hàng nước ngoài nhập tay: prefix 'NN' + 10 chữ số (tổng 12 ký tự).
 _FOREIGN_CODE_RE = re.compile(r'^NN\d{10}$', re.ASCII)
 
+# Cổng gác governance qua System Parameter. Mặc định (chưa set, hoặc giá trị
+# KHÔNG thuộc nhóm "tắt") = BẬT ràng buộc. Dùng để tắt tạm khi migrate dữ liệu
+# khách hàng cũ (MST rác/12 số/nước ngoài) qua công cụ Import rồi bật lại, không
+# cần deploy. Gác CẢ _check_vat_format lẫn _check_foreign_customer_code.
+GOVERNANCE_PARAM = 'partner_customer_code.governance_enforce'
+GOVERNANCE_OFF_VALUES = ('0', 'false', 'no', 'off', '')
+
 
 class ResPartner(models.Model):
     _inherit = 'res.partner'
@@ -79,6 +86,21 @@ class ResPartner(models.Model):
         help="Tự sinh: Trong nước/Nội bộ = MST; Nước ngoài = 'NN' + MST.",
     )
 
+    # Định danh người mua CÁ NHÂN trên hóa đơn (tổ chức dùng MST, bỏ trống).
+    # Người VN -> CCCD; người nước ngoài -> Hộ chiếu. Để field riêng (không
+    # gộp theo customer_type) vì CCCD/Hộ chiếu phụ thuộc cá nhân/quốc tịch,
+    # không phải phân loại tổ chức.
+    cccd_no = fields.Char(
+        string='Số CCCD',
+        copy=False,
+        help="Số căn cước công dân của người mua cá nhân (người VN).",
+    )
+    passport_no = fields.Char(
+        string='Số hộ chiếu',
+        copy=False,
+        help="Số hộ chiếu của người mua cá nhân (người nước ngoài).",
+    )
+
     # ------------------------------------------------------------------
     # Helpers
     # ------------------------------------------------------------------
@@ -99,6 +121,18 @@ class ResPartner(models.Model):
         if ctype == CUSTOMER_TYPE_DOMESTIC:
             vals['customer_code'] = self._gen_customer_code(ctype, vat)
         return vals
+
+    @api.model
+    def _governance_enforced(self):
+        """True nếu đang BẬT các ràng buộc định dạng (mặc định).
+
+        Tắt tạm bằng System Parameter `partner_customer_code.governance_enforce`
+        = False/0/no/off để migrate dữ liệu khách hàng cũ (MST rác/12 số/nước
+        ngoài) qua công cụ Import, rồi bật lại — không cần deploy. KHÔNG ảnh
+        hưởng ràng buộc UNIQUE(customer_code) (ràng buộc DB, luôn hiệu lực)."""
+        val = self.env['ir.config_parameter'].sudo().get_param(
+            GOVERNANCE_PARAM, 'True')
+        return (val or '').strip().lower() not in GOVERNANCE_OFF_VALUES
 
     # ------------------------------------------------------------------
     # Compute
@@ -148,6 +182,8 @@ class ResPartner(models.Model):
     @api.constrains('vat')
     def _check_vat_format(self):
         """MST (mọi loại KH): rỗng, 10 chữ số, hoặc 10 chữ số-3 chữ số."""
+        if not self._governance_enforced():
+            return
         for partner in self:
             v = (partner.vat or '').strip()
             if v and not _VAT_RE.match(v):
@@ -159,6 +195,8 @@ class ResPartner(models.Model):
     @api.constrains('customer_code', 'customer_type')
     def _check_foreign_customer_code(self):
         """KH nước ngoài: customer_code (nếu có) phải là 'NN' + 10 chữ số."""
+        if not self._governance_enforced():
+            return
         for partner in self:
             code = partner.customer_code
             if partner.customer_type == CUSTOMER_TYPE_FOREIGN and code \

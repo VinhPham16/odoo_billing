@@ -14,6 +14,15 @@
                 <button name="action_send_draft_invoice" type="object"
                         string="Send Draft"
                         invisible="state != 'draft' or move_type not in ('out_invoice', 'out_refund', 'out_receipt')"/>
+                <!--
+                    Nút "In PDF nháp": tải PDF proforma bằng đúng template VNPost
+                    mà KHÔNG gửi email, KHÔNG đổi state. Cùng điều kiện hiển thị
+                    với Send Draft (hóa đơn bán, trạng thái draft). Dùng khi kế
+                    toán chỉ muốn tải bản nháp về mà không gửi.
+                -->
+                <button name="action_print_draft_invoice" type="object"
+                        string="In PDF nháp"
+                        invisible="state != 'draft' or move_type not in ('out_invoice', 'out_refund', 'out_receipt')"/>
             </xpath>
         </field>
     </record>
